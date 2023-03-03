@@ -89,16 +89,62 @@ intros. apply/H3. done. intros. apply/IH. apply/H3. done. Qed.
 
 (*Using (forall x , In x .... generates a stronger induction principle*)
 
+
+
+
+
+
+Variant FinSeq_gen (R : gcType ->  Prop) : gcType   -> Prop :=
+ | fin_seq_msg e0  d u :  R e0 -> FinSeq_gen R  (GCMsg d u e0) 
+ | fin_seq_branch (es : seq gcType)  d :  Forall R es -> FinSeq_gen R (GCBranch d es) 
+ | fin_seq_end :   FinSeq_gen R GCEnd .
+
+Lemma FinSeq_gen_mon : monotone1 FinSeq_gen. 
+Proof. 
+move => x0 x1. intros. induction IN;try done. con. eauto. con. apply/List.Forall_forall. eauto. 
+intros. move/List.Forall_forall : H. eauto. 
+con. 
+Qed.
+
+
+Hint Resolve FinSeq_gen_mon : paco. 
+
+Notation Finite := (paco1 FinSeq_gen bot1).
+Lemma Finite_msg : forall a u g0,  Finite (GCMsg a u g0) -> Finite g0. 
+Proof. 
+intros. punfold H. inv H. pclearbot=>//=.
+Qed.
+
+
+
+
+
+
+
+Lemma Finite_branch : forall a g (gs : seq gcType),  Finite (GCBranch a gs) -> In g gs -> Finite g. 
+Proof. 
+intros. punfold H. inv H. injt. 
+forallApp H2 H0=> [] //=[] //=. 
+Qed.
+
+Hint Resolve  Finite_msg  Finite_branch. 
+
+
+Lemma Finite_coerce : forall a gs, Finite (GCBranch a gs) -> exists (gs' : seq gcType), gs = gs'. 
+Proof. 
+intros. punfold H. inv H. exists es. done. 
+Qed.
+
 Inductive cproject_gen (p : ptcp) (R : gcType ->  ecType -> Prop) : gcType -> ecType -> Prop :=
  | cproject_msg_s g0 a e0 u d : comp_dir p a = Some d ->
-                                  R g0 e0 -> cproject_gen p R (GCMsg a u g0) (ECMsg d (action_ch a) u e0) (*Assumption does not have to build something*)
+                                  R g0 e0 -> cproject_gen p R (GCMsg a u g0) (ECMsg d (action_ch a) u e0)
  | cproject_msg_n g0 a e0 u : comp_dir p a = None ->
                                  R g0 e0 -> part_of_all p g0 ->  cproject_gen p R (GCMsg a u g0) e0(*assumption has to build something*)
  | cproject_gen_branch_f (gs : seq gcType) (es : seq ecType) a d :  comp_dir p a = Some d -> size gs = size es ->
                                         (forall p, In p (zip gs es) ->  R p.1 p.2 ) -> cproject_gen p R (GCBranch a gs) (ECBranch d (action_ch a) es)
  | cproject_gen_branch_o g (gs : seq gcType)  a e : comp_dir p a = None -> In g gs ->  (*We need list to be non -empty otherweise it projects to anything*)
                                     (forall g', In g' gs ->  part_of_all p g' /\  R g' e) ->  cproject_gen p R (GCBranch a gs) e
- | cproject_gen_end g : ~ part_of p g -> Finite g ->(* SizePred g *) cproject_gen p R g ECEnd. 
+ | cproject_gen_end g : ~ part_of p g -> Finite g -> cproject_gen p R g ECEnd. (*Finite predicate ensures coinductive lists in the global type are finite*)
 Hint Constructors cproject_gen. 
 
 
@@ -310,8 +356,7 @@ Qed.
 
 Hint Resolve project_gen_mon : paco. 
 
-(*Notation so that rewriting will recognize both by notation and unfolded term*)
-Notation Unravelg2 := (fun g gc =>  paco2 (UnfUnravelg \o Unravelg2_gen) bot2 g gc).
+
 
 Definition CProject g p e := paco2 (cproject_gen p) bot2 g e. 
 
@@ -603,7 +648,7 @@ elim/part_of_all_ind2 : H ec g e H0 H1 H2;intros.
 Qed.
 
 
-Let rwd := (e_to_c'_eq, e_to_c_eq, g_to_c'_eq, g_to_c_eq). 
+Let rwd := (etocoind'_eq, etocoind_eq, g_to_c'_eq, g_to_c_eq). 
 Ltac seq := rewrite ?eqs -?rwd.
 Ltac seq_in H := rewrite ?eqs -?rwd in H.
 
@@ -629,33 +674,33 @@ Qed.
 
 
 
-Lemma Project_etree : forall p g e, Project g p e -> Unravele2 e (e_to_c e). 
+Lemma Project_etree : forall p g e, Project g p e -> Unravele2 e (etocoind e). 
 Proof. 
 move => p. pcofix CIH. intros. apply part_of2_or_end in H0 as H0'. 
 destruct H0'. 
 elim/part_of_all2_ind2 : H e H0;intros. 
-punfold H1. inv H1. rewrite H0 in H2. rewrite e_to_c_full_eunf.  apply/Unravele2_iff. inv H2;pclearbot;try comp_disc. 
+punfold H1. inv H1. rewrite H0 in H2. rewrite etocoind_full_eunf.  apply/Unravele2_iff. inv H2;pclearbot;try comp_disc. 
 pfold. seq.  con. con. eauto. pfold. con. seq. con. 
 apply/H1. punfold H3. inv H3. rewrite H2 in H4. inv H4;pclearbot ;try comp_disc. 
 apply/Project_eunf. done. pfold. con. rewrite -H5. con. rewrite -part_of2_iff. eauto. 
 rewrite -Rolling_iff.  eauto. 
-punfold H1. inv H1. rewrite H0 in H2. rewrite e_to_c_full_eunf.  apply/Unravele2_iff. inv H2;pclearbot;try comp_disc. 
+punfold H1. inv H1. rewrite H0 in H2. rewrite etocoind_full_eunf.  apply/Unravele2_iff. inv H2;pclearbot;try comp_disc. 
 pfold. seq.  con. con. rewrite size_map //=. 
 move/ForallP : H8. clear H5 H0 H2. elim : gs es H7. case=>//=. 
 move => a0 l IH. case=>//=. move => a1 l0 [] Heq. intros. inv H8. pclearbot. simpl in *. 
 con;eauto. 
 seq. pfold. con. con. 
-punfold H3. inv H3. rewrite H2 in H4. rewrite e_to_c_full_eunf. apply/Unravele2_iff. inv H4;pclearbot;try comp_disc. 
-rewrite -Unravele2_iff. rewrite -e_to_c_full_eunf. apply/H1. eauto. eauto. 
+punfold H3. inv H3. rewrite H2 in H4. rewrite etocoind_full_eunf. apply/Unravele2_iff. inv H4;pclearbot;try comp_disc. 
+rewrite -Unravele2_iff. rewrite -etocoind_full_eunf. apply/H1. eauto. eauto. 
 move/H10 : H8. ssa. pclearbot. apply/Project_eunf. done. 
 seq. pfold. con. con. 
-rewrite e_to_c_full_eunf. apply/Unravele2_iff. rewrite H. seq. pfold. con. con. 
+rewrite etocoind_full_eunf. apply/Unravele2_iff. rewrite H. seq. pfold. con. con. 
 Qed.
 
 
 Lemma ICProject_iff : forall g p e, Project g p e <-> exists gc ec, Unravelg2 g gc /\ Unravele2 e ec /\ CProject gc p ec. 
 Proof. 
-intros. split. intros. exists (g_to_c g). exists (e_to_c e). ssa. 
+intros. split. intros. exists (g_to_c g). exists (etocoind e). ssa. 
 apply/Project_gtree;eauto.  
 apply/Project_etree;eauto.  
 apply/ICProject;eauto. apply/Project_gtree;eauto. apply/Project_etree;eauto.  
