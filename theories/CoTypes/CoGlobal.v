@@ -276,6 +276,319 @@ con. inv H2.  pclearbot. ssa. right. eauto. inv H2. ssa. eapply IH. eauto. done.
 Qed. 
 
 
+
+
+Fixpoint gType_fv2 e :=
+  match e with
+  | GVar j => [:: j]
+  | GEnd => nil
+  | GMsg _ _ g0 => gType_fv2 g0
+  | GBranch _ gs => flatten (map gType_fv2 gs)
+  | GRec g0 => map predn (filter (fun n => n != 0) (gType_fv2 g0))
+  end.
+
+Definition gclosed g := forall n, n \notin gType_fv2 g.
+
+Lemma gType_fv2_ren : forall g sigma, (gType_fv2 g ⟨g sigma⟩) = map sigma (gType_fv2 g). 
+Proof. 
+elim;rewrite //=;intros. 
+rewrite -!map_comp. rewrite H.
+rewrite filter_map /=. clear H. asimpl. 
+elim : (gType_fv2 g). done. ssa. 
+destruct (eqVneq a 0). subst. simpl. ssa. 
+simpl. destruct a. done. simpl. f_equal. done. 
+rewrite -!map_comp. rewrite map_flatten. rewrite -!map_comp. 
+f_equal. apply/eq_in_map=> x xIn. simpl. auto. 
+Qed.
+
+Lemma gType_fv2_subst : forall g sigma, (gType_fv2 g [g sigma]) = flatten (map (sigma >> gType_fv2) (gType_fv2 g)). 
+Proof. 
+elim;rewrite //=;intros. 
+rewrite cats0. asimpl. done. 
+rewrite H. rewrite -!map_comp. 
+asimpl. rewrite filter_flatten.
+rewrite -!map_comp. rewrite !map_flatten.
+rewrite -map_comp.
+rewrite /comp. asimpl. clear H.
+elim : ( gType_fv2 g);try done. ssa. 
+destruct (eqVneq a 0). simpl. subst. simpl. done. 
+simpl. destruct a. done. simpl.
+f_equal. asimpl. rewrite gType_fv2_ren. 
+rewrite filter_map /=. rewrite -map_comp.
+clear i.  clear H. 
+elim : ( gType_fv2 (sigma a));try done. ssa. 
+f_equal. done. done.  
+
+rewrite -map_comp. 
+rewrite !map_flatten.  rewrite -!map_comp. 
+rewrite /comp. asimpl. 
+elim : l H. done. ssa. simpl.
+rewrite flatten_cat. f_equal. auto. apply/H. auto. 
+Qed.
+
+
+(*Intermediate judgment that gives us induction principle to show Rolling_no_fv*)
+Inductive has_var (n : nat ) :  gType -> Prop := 
+ | hv0  : has_var n (GVar n)
+ | hv1 a u g0 : has_var n g0 -> has_var n (GMsg a u g0)
+ | hv2 g gs a : In g gs -> has_var n g  -> has_var n (GBranch a gs)
+ | hv3 g : has_var n (g [g GRec g .: GVar]) ->  has_var n (GRec g).
+Hint Constructors has_var. 
+
+
+
+Lemma has_var_subst : forall g n n' sigma, has_var n g -> has_var n' (sigma n)  ->  has_var n' g [g sigma]. 
+Proof. 
+move => g n n' sigma  H. elim : H n' sigma;rewrite //=;intros. 
+con. apply/H0. done. simpl. econstructor. apply/inP. apply/mapP. exists g0. apply/inP. done. eauto. 
+apply/H1. done. con. asimpl. move/H0 : H1. asimpl. done. 
+Qed. 
+
+Lemma has_varP : forall g n, n \in gType_fv2 g -> has_var n g. 
+Proof. 
+elim=>//=;intros;auto. rewrite inE in H. rewrite (eqP H). done. 
+con. move : H0. move/mapP=>[]. intros. subst. rewrite mem_filter in p. ssa. 
+destruct x;try done. simpl. 
+move/H : H1. intros. apply/has_var_subst. eauto. simpl. con. 
+move/flattenP : H0=>[] x. move/mapP=>[]. intros. subst. econstructor. 
+apply/inP. eauto. eauto. 
+Qed.
+
+(*Cool Trick, when going from coinductive to negation of some structurally recursive boolean,
+ intermediate step is to show boolean implies inductive unfolding judgment,
+ it's negation is introduced into the context and the proof can be by induction on that.
+ The technique informally says from the coinductive Rolling judgment and a proof
+ that we will observe a variable in finite time, we can reach a contradiction,
+ so there can be no free variables.
+*)
+Lemma Rolling_no_fv : forall g, Rolling g -> (forall n, n \notin gType_fv2 g).
+Proof. 
+intros. apply/negP. move/has_varP=>HH. elim : HH H;intros. 
+punfold H. inv H. inv H0. punfold H1. inv H1. inv H2. pclearbot. eauto. 
+punfold H2. inv H2. inv H3. apply/H1. move/ForallP : H5. move/(_ _ H). case=>//=.
+punfold H1. inv H1. rewrite full_unf_subst in H2. apply/H0. 
+pfold. con. done. 
+Qed.
+
+(*Proposition 4 from the paper*)
+Lemma proposition_4 : forall g gc, Unravelg2 g gc -> gclosed g. 
+Proof. intros. rewrite /gclosed.  apply/Rolling_no_fv. apply/Unravel_Rolling. eauto.
+Qed. 
+
+
+
+
+
+
+(*Fixpoint gType_fv2 e :=
+  match e with
+  | GVar j => [:: j]
+  | GEnd => nil
+  | GMsg _ _ g0 => gType_fv2 g0
+  | GBranch _ gs => flatten (map gType_fv2 gs)
+  | GRec g0 => map predn (filter (fun n => n != 0) (gType_fv2 g0))
+  end.
+
+Definition gclosed g := forall n, n \notin gType_fv2 g.
+
+Lemma gType_fv2_ren : forall g sigma, (gType_fv2 g ⟨g sigma⟩) = map sigma (gType_fv2 g). 
+Proof. 
+elim;rewrite //=;intros. 
+rewrite -!map_comp. rewrite H.
+rewrite filter_map /=. clear H. asimpl. 
+elim : (gType_fv2 g). done. ssa. 
+destruct (eqVneq a 0). subst. simpl. ssa. 
+simpl. destruct a. done. simpl. f_equal. done. 
+rewrite -!map_comp. rewrite map_flatten. rewrite -!map_comp. 
+f_equal. apply/eq_in_map=> x xIn. simpl. auto. 
+Qed.
+
+Lemma gType_fv2_subst : forall g sigma, (gType_fv2 g [g sigma]) = flatten (map (sigma >> gType_fv2) (gType_fv2 g)). 
+Proof. 
+elim;rewrite //=;intros. 
+rewrite cats0. asimpl. done. 
+rewrite H. rewrite -!map_comp. 
+asimpl. rewrite filter_flatten.
+rewrite -!map_comp. rewrite !map_flatten.
+rewrite -map_comp.
+rewrite /comp. asimpl. clear H.
+elim : ( gType_fv2 g);try done. ssa. 
+destruct (eqVneq a 0). simpl. subst. simpl. done. 
+simpl. destruct a. done. simpl.
+f_equal. asimpl. rewrite gType_fv2_ren. 
+rewrite filter_map /=. rewrite -map_comp.
+clear i.  clear H. 
+elim : ( gType_fv2 (sigma a));try done. ssa. 
+f_equal. done. done.  
+
+rewrite -map_comp. 
+rewrite !map_flatten.  rewrite -!map_comp. 
+rewrite /comp. asimpl. 
+elim : l H. done. ssa. simpl.
+rewrite flatten_cat. f_equal. auto. apply/H. auto. 
+Qed.
+
+
+(*Intermediate judgment that gives us induction principle to show Rolling_no_fv*)
+Inductive has_var (n : nat ) :  gType -> Prop := 
+ | hv0  : has_var n (GVar n)
+ | hv1 a u g0 : has_var n g0 -> has_var n (GMsg a u g0)
+ | hv2 g gs a : In g gs -> has_var n g  -> has_var n (GBranch a gs)
+ | hv3 g : has_var n (g [g GRec g .: GVar]) ->  has_var n (GRec g).
+Hint Constructors has_var. 
+
+
+
+Lemma has_var_subst : forall g n n' sigma, has_var n g -> has_var n' (sigma n)  ->  has_var n' g [g sigma]. 
+Proof. 
+move => g n n' sigma  H. elim : H n' sigma;rewrite //=;intros. 
+con. apply/H0. done. simpl. econstructor. apply/inP. apply/mapP. exists g0. apply/inP. done. eauto. 
+apply/H1. done. con. asimpl. move/H0 : H1. asimpl. done. 
+Qed. 
+
+
+
+Lemma has_varP : forall g n, n \in gType_fv2 g -> has_var n g. 
+Proof. 
+elim=>//=;intros;auto. rewrite inE in H. rewrite (eqP H). done. 
+con. move : H0. move/mapP=>[]. intros. subst. rewrite mem_filter in p. ssa. 
+destruct x;try done. simpl. 
+move/H : H1. intros. apply/has_var_subst. eauto. simpl. con. 
+move/flattenP : H0=>[] x. move/mapP=>[]. intros. subst. econstructor. 
+apply/inP. eauto. eauto. 
+Qed.*)
+
+(*Cool Trick, when going from coinductive to negation of some structurally recursive boolean,
+ intermediate step is to show boolean implies inductive unfolding judgment,
+ it's negation is introduced into the context and the proof can be by induction on that.
+ The technique informally says from the coinductive Rolling judgment and a proof
+ that we will observe a variable in finite time, we can reach a contradiction,
+ so there can be no free variables.
+*)
+
+(*Lemma Rolling_no_fv : forall g, Rolling g -> (forall n, n \notin gType_fv2 g).
+Proof. 
+intros. apply/negP. move/has_varP=>HH. elim : HH H;intros. 
+punfold H. inv H. inv H0. punfold H1. inv H1. inv H2. pclearbot. eauto. 
+punfold H2.  inv H2.  inv H3. move/ForallP : H5. move/(_ _ H). case=>//=. 
+apply/H0. pfold. con.  punfold H1.  inv H1. rewrite full_unf_subst in H2. done. 
+Qed .
+
+Fixpoint non_cont g :=
+match g with 
+| GEnd => false
+| GVar _ => false 
+| GMsg a u g' => non_cont g'
+| GBranch a gs => has non_cont gs
+| GRec g' => (~~ guarded 0 g') || (non_cont g')
+end. 
+
+Lemma contractive_neg : forall g, contractive2 g -> ~~ (non_cont g).
+Proof. 
+elim;rewrite //=;intros. rewrite negb_or negb_involutive. ssa. 
+apply/hasPn=> x xIn. apply/H=>//=. apply (allP H0 _ xIn). 
+Qed. 
+
+Lemma contractive_neg2 : forall g,~~ (non_cont g) -> contractive2 g.
+Proof. 
+elim;rewrite //=;intros. rewrite negb_or negb_involutive in H0. ssa. 
+apply/allP. move => x xIn. apply/H. done. move/hasPn : H0. move/(_ _ xIn)=>//=. 
+Qed. 
+
+Lemma cont_eq : forall g, contractive2 g = ~~ (non_cont g). 
+Proof. intros. apply/eq_iff;split. apply/contractive_neg. apply/contractive_neg2. 
+Qed .
+
+
+Lemma gType_fv2_unf : forall g n, (n \in gType_fv2 g) = (n \in gType_fv2 (unf g)).  
+Proof. 
+case=>//=. intros. rewrite gType_fv2_subst. 
+apply/eq_iff. split. move/mapP=>[] x /=. rewrite mem_filter. ssa. subst. 
+apply/flattenP. destruct x;try done. simpl. 
+have : ((GRec g .: GVar) >> gType_fv2) = 
+([seq i.-1 | i <- gType_fv2 g & i != 0] .: fun n => [::n]).
+asimpl. simpl. f_equal. move=>->.
+exists ([::x]). 
+apply/mapP. exists x.+1. ssa. simpl. done. done. 
+move/flattenP=>[] x. move/mapP=>[] x0. intros. subst. destruct x0;try done.  
+move : q0. asimpl. simpl. rewrite inE. move/eqP. intros. subst. apply/mapP. exists x0.+1=>//=. 
+rewrite mem_filter. ssa. 
+Qed.
+
+Lemma gType_fv2_full_unf : forall g n, (n \in gType_fv2 g) = (n \in gType_fv2 (full_unf g)).  
+Proof. 
+intros. rewrite /full_unf. remember (mu_height g). clear Heqn0. elim : n0 g. done. 
+intros. rewrite iterS. rewrite H. apply/gType_fv2_unf. 
+Qed.
+
+
+Lemma guarded_sig2_ren : forall g sigma sigma' i, guarded i g ⟨g sigma⟩ -> (forall n, (sigma n) != i ->  (sigma' n) != i) -> guarded i g ⟨g sigma'⟩.
+Proof.
+elim;rewrite /=;intros;try done.
+apply H0. done.
+asimpl. apply : H. eauto. move => n.  asimpl. simpl. intros. destruct n. done. simpl in *. 
+move : H. rewrite /funcomp. intros. suff :  sigma' n != i.  lia. apply : H1. lia. 
+Qed.
+
+
+Lemma contractive2_ren2 : forall g sigma, contractive2 g ⟨g sigma⟩ -> contractive2 g. 
+Proof. 
+elim;intros;ssa. eapply (@guarded_sig2_ren _ _ id) in H1. move : H1. asimpl. done.
+asimpl.  rewrite /id. intros. apply/eqP.  move => HH. subst. simpl in H0. done. eauto. 
+eauto. apply/allP=> x xIn.  rewrite all_map in H0.  eapply H.  eauto.  apply (allP H0).  done. 
+Qed.
+
+Lemma contractive2_subst3 : forall g sigma n, contractive2 g [g sigma] -> n \in gType_fv2 g -> contractive2 (sigma n).
+Proof. 
+elim;rewrite /=;intros;try done. rewrite inE in H0. rewrite (eqP H0). done. 
+move/mapP : H1. case. intros. subst. rewrite mem_filter in p. ssa. destruct x. ssa. ssa.
+eapply H in H4.  2: eauto. simpl in H4. move : H4. asimpl.
+move/contractive2_ren2.  done. eauto.
+move/flattenP : H1.   case.  intros. move/mapP : p.   case.  intros. subst. 
+apply/H.  eauto. rewrite all_map in H0. apply (allP H0).  done. done.  
+Qed. 
+
+
+
+
+Lemma contractive_unf2 : forall g , contractive2 (unf g) -> contractive2 g. 
+Proof.
+intros. rewrite /unf. destruct g;try done. ssa. 
+destruct (guarded 0 g) eqn:Heqn. done. 
+eapply (@contractive2_subst3 _ _ 0) in H. ssa. rewrite Heqn in H0.  done.
+rewrite gType_fv2_full_unf. 
+
+apply eguarded_unfv in Heqn as Heqn'. rewrite Heqn' /= !inE //=.
+apply econtractive2_subst2 in H.  done. 
+Qed. 
+
+Lemma econtractive_full_unf2 : forall g , econtractive2 (full_eunf g) -> econtractive2 g. 
+Proof. intros. rewrite /full_eunf in H. remember (emu_height g). clear Heqn. 
+elim : n g H. done. ssa. apply/econtractive_unf2. apply/H.  rewrite -iterSr /=. done. 
+Qed.
+
+Lemma econtractive_full_unf2_eq : forall g , econtractive2 g = econtractive2 (full_eunf g). 
+Proof. intros. apply/eq_iff. split. apply/econtractive_full_eunf.
+apply/econtractive_full_unf2. 
+Qed. 
+
+
+*)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 Fixpoint enumg e :=
 e::
 match e with 
