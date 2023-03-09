@@ -1,12 +1,12 @@
 From mathcomp Require Import all_ssreflect zify finmap.
-From Projection Require Export IntermediateProj.
+From Projection Require Export intermediateProj.
 Require Import Paco.paco.
 
 Set Implicit Arguments.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
-Let eqs := IntermediateProj.eqs. 
+Let eqs := intermediateProj.eqs. 
 
 
 
@@ -346,7 +346,7 @@ end.
 
 Definition nextge_unf p ge :=nextge p (full_geunf ge). 
 
-Definition enumge ge := Utils.compose (enumg ge.1) (enum ge.2) pair. 
+Definition enumge ge := utils.compose (enumg ge.1) (enum ge.2) pair. 
 
 Definition g_top_act p g := 
 match g with 
@@ -408,7 +408,7 @@ Qed.
 
 Lemma selfge : forall e, e \in enumge e. 
 Proof. intros. rewrite /enumge. destruct e. apply/mem_compose=>//=.  
-apply/CoGlobal.selfe.  apply/selfe. 
+apply/coGlobal.selfe.  apply/selfe. 
 Qed. 
 
 

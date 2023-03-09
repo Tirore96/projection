@@ -1,12 +1,12 @@
 From mathcomp Require Import all_ssreflect zify.
-From Projection Require Import ProjectDecide.
+From Projection Require Import projectDecide.
 Require Import Paco.paco.
 
 Set Implicit Arguments.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
-Let eqs := IntermediateProj.eqs. 
+Let eqs := intermediateProj.eqs. 
 
 
 Fixpoint trans p g := 

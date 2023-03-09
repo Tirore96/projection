@@ -1,12 +1,12 @@
 From mathcomp Require Import all_ssreflect zify.
-From CoTypes Require Export CoProj.
+From CoTypes Require Export coProj.
 Require Import Paco.paco.
 
 Set Implicit Arguments.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
-Let eqs := (CoLocal.eqs, CoGlobal.eqs). 
+Let eqs := (coLocal.eqs, coGlobal.eqs). 
 
 
 
