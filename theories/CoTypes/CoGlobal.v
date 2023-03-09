@@ -1,7 +1,7 @@
 
 From mathcomp Require Import all_ssreflect zify.
 
-From IndTypes Require Export Elimination.
+From IndTypes Require Export elimination.
 Require Import Paco.paco.
 
 Set Implicit Arguments.
@@ -107,8 +107,8 @@ Lemma g_to_c'_eq g : g_to_c' g_to_c g = match full_unf g with
 end.
 Proof. 
 rewrite /g_to_c'. destruct (full_unf g);try done. 
-f_equal. elim : l. simpl. rewrite !Utils.coeq comap_eq //=. 
-intros. rewrite Utils.coeq. rewrite Utils.comap_eqs /=. rewrite Utils.coeq.  f_equal. done. 
+f_equal. elim : l. simpl. rewrite !utils.coeq comap_eq //=. 
+intros. rewrite utils.coeq. rewrite utils.comap_eqs /=. rewrite utils.coeq.  f_equal. done. 
 Qed.
 
 Lemma g_to_c_eq g : g_to_c g = g_to_c' g_to_c g. 
@@ -133,7 +133,7 @@ Proof. done. Qed.
 Let unf_eqs := (full_unf_end, full_unf_msg, full_unf_branch). 
 
 
-Let eqs := (Utils.comap_eqs,g_to_cs_eqs, unf_eqs, Utils.coeq). 
+Let eqs := (utils.comap_eqs,g_to_cs_eqs, unf_eqs, utils.coeq). 
 
 Inductive Unravelg_gen (R : gType -> gcType  -> Prop) : gType -> gcType  -> Prop :=
  | Unravelg_gen_msg g0 gc0 a u : R g0 gc0 -> Unravelg_gen R (GMsg a u g0) (GCMsg a u gc0)

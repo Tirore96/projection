@@ -1,6 +1,6 @@
 From mathcomp Require Import all_ssreflect zify.
 
-From IndTypes Require Export Elimination.
+From IndTypes Require Export elimination.
 Require Import Paco.paco.
 
 Check upaco2. 
@@ -284,8 +284,8 @@ match full_eunf g with
 end.
 Proof. 
 rewrite /etocoind'. destruct (full_eunf g);try done. 
-f_equal. elim : l. simpl. rewrite !Utils.coeq comap_eq //=. 
-intros. rewrite Utils.coeq. rewrite Utils.comap_eqs /=. rewrite Utils.coeq.  f_equal. done. 
+f_equal. elim : l. simpl. rewrite !utils.coeq comap_eq //=. 
+intros. rewrite utils.coeq. rewrite utils.comap_eqs /=. rewrite utils.coeq.  f_equal. done. 
 Qed.
 
 Lemma etocoind_eq g : etocoind g = etocoind' etocoind g. 
@@ -309,7 +309,7 @@ Proof. done. Qed.
 
 Let eunf_eqs := (full_eunf_end, full_eunf_msg, full_eunf_branch). 
 
-Let eqs := (Utils.comap_eqs,etocoinds_eqs, eunf_eqs, Utils.coeq). 
+Let eqs := (utils.comap_eqs,etocoinds_eqs, eunf_eqs, utils.coeq). 
 
 Inductive EQ_gen  (R : ecType -> ecType -> Prop) : ecType -> ecType -> Prop := 
  | eq_end : EQ_gen R ECEnd ECEnd

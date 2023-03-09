@@ -1,6 +1,6 @@
 From mathcomp Require Import all_ssreflect zify.
-Require Export Proj.Utils.
-From IndTypes Require Export Syntax. 
+Require Export Proj.utils.
+From IndTypes Require Export syntax. 
 Set Implicit Arguments.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
@@ -14,6 +14,124 @@ with endpoint_ind := Induction for endpoint Sort Prop.
 Check gType_ind.
 Combined Scheme gvme_ind from gType_ind,value_ind,mysort_ind,endpoint_ind.
 *)
+
+
+Fixpoint mu_height g :=
+match g with
+| GRec g0 => (mu_height g0).+1
+| _ => 0
+end.
+
+Fixpoint emu_height g :=
+match g with
+| ERec g0 => (emu_height g0).+1
+| _ => 0
+end.
+
+Fixpoint action_pred g :=
+match g with 
+| GMsg a u g0 => (~~ (ptcp_from a == ptcp_to a)) && action_pred g0
+| GBranch a gs => (~~ (ptcp_from a == ptcp_to a)) && all action_pred gs
+| GRec g0 => action_pred g0
+| _ => true 
+end.
+
+
+Fixpoint size_pred (g : gType) :=
+match g with 
+| GMsg a u g0 => size_pred g0
+| GBranch a gs => (0 < size gs) && all size_pred gs
+| GRec g0 => size_pred g0
+| _ => true
+end.
+
+Fixpoint esize_pred (g : endpoint) :=
+match g with 
+| EMsg _ _ _ e0 => esize_pred e0
+| EBranch _ _ es => (0 < size es) && all esize_pred es
+| ERec g0 => esize_pred g0
+| _ => true
+end.
+
+Fixpoint guarded i g := 
+match g with
+| GVar j => j != i
+| GEnd => true
+| GMsg _ _ g0 => true
+| GBranch _ gs => true
+| GRec g0 => guarded i.+1 g0
+end. 
+
+Fixpoint eguarded i g := 
+match g with
+| EVar j => j != i
+| EEnd => true
+| EMsg _ _ _ g0 => true
+| EBranch _ _ gs => true
+| ERec g0 => eguarded i.+1 g0
+end. 
+
+Fixpoint contractive2 g := 
+match g with
+| GVar j => true
+| GEnd => true
+| GMsg _ _ g0 => contractive2 g0
+| GBranch  _ gs => all contractive2 gs
+| GRec g0 => (guarded 0 g0) && (contractive2 g0)
+end. 
+
+Fixpoint econtractive2 g := 
+match g with
+| EVar j => true
+| EEnd => true
+| EMsg _ _ _ g0 => econtractive2 g0
+| EBranch _ _ gs => all econtractive2 gs
+| ERec g0 => (eguarded 0 g0) && (econtractive2 g0)
+end. 
+
+Open Scope nat_scope.
+Fixpoint gsize e := 
+match e with 
+| GMsg  _ _ e0 => (gsize e0).+1
+| GBranch _ es => foldr (fun e0 acc => (gsize e0) + acc ) 2 es
+(*| GRec  e0 =>  (gsize e0).+1*)
+| GRec  e0 =>  (gsize e0) +  (gsize e0)
+| _ => 1
+end.
+
+
+
+
+Fixpoint esize e := 
+match e with 
+| EMsg _  _ _ e0 => (esize e0).+1
+| EBranch _ _ es => foldr (fun e0 acc => (esize e0) + acc ) 2 es
+| ERec  e0 => (esize e0).+1
+| _ => 1
+end.
+
+
+Lemma inject2 : forall sigma, injective sigma ->  injective (0 .: sigma >> succn).
+Proof. 
+intros. intro. intros. destruct x1;destruct x2;try done. inversion H0. f_equal. apply/H. done. 
+Qed.
+
+
+Lemma injective_shift : injective S.
+Proof. intro. intros. inversion H.  done. Qed.
+
+Lemma inject_comp : forall (A B C : Type) (sigma : A -> B) (sigma' : B -> C) , injective sigma -> injective sigma' -> injective (sigma >> sigma').  
+Proof. 
+intros. rewrite /funcomp. intro. intros. apply H. apply H0. done.
+Qed.
+
+
+
+Hint Resolve inject2 injective_shift.
+
+Definition comp_dir p a :=  if p == (ptcp_from a) then Some Sd else if p == (ptcp_to a) then Some Rd else None.
+Ltac comp_disc  :=  solve [ destruct (comp_dir _ _);done].
+
 
 
 
