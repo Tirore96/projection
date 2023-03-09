@@ -159,16 +159,16 @@ Hint Resolve not_part_all2_msg not_part_all2_msg2    not_part_all2_branch2.
 
 (*Using (forall x , In x .... generates a stronger induction principle*)
 
-Inductive project_gen (p : ptcp) (R : gType ->  endpoint -> Prop) : gType -> endpoint -> Prop :=
+Inductive project_gen (p : ptcp) (R : gType ->  lType -> Prop) : gType -> lType -> Prop :=
  | project_msg_s g0 a e0 u d : comp_dir p a = Some d ->
                                   R g0 e0 -> project_gen p R (GMsg a u g0) (EMsg d (action_ch a) u e0) (*Assumption does not have to build something*)
  | project_msg_n g0 a e0 u : comp_dir p a = None ->
                                  R g0 e0 -> part_of_all2 p g0 ->  project_gen p R (GMsg a u g0) e0(*assumption has to build something*)
- | project_gen_branch_f (gs : seq gType) (es : seq endpoint) a d :  comp_dir p a = Some d -> size gs = size es ->
+ | project_gen_branch_f (gs : seq gType) (es : seq lType) a d :  comp_dir p a = Some d -> size gs = size es ->
                                         (forall p, In p (zip gs es) ->  R p.1 p.2 ) -> project_gen p R (GBranch a gs) (EBranch d (action_ch a) es)
  | project_gen_branch_o g (gs : seq gType)  a e : comp_dir p a = None -> In g gs ->  (*We need list to be non -empty otherweise it projects to anything*)
                                     (forall g', In g' gs ->  part_of_all2 p g' /\  R g' e) ->  project_gen p R (GBranch a gs) e
- | project_gen_end g : ~ part_of2 p g -> Rolling g -> project_gen p R g EEnd. (*Need to preserve that all projectable g's satisfy Rolling g*)
+ | project_gen_end g : ~ part_of2 p g -> gInvPred g -> project_gen p R g EEnd. (*Need to preserve that all projectable g's satisfy gInvPred g*)
 Hint Constructors project_gen. 
 
 Notation UnfProj := (ApplyF full_unf full_eunf).
@@ -204,7 +204,7 @@ Qed.
 
 
 
-Lemma ICpart_of1 : forall p g gc, part_of2 p g -> Unravelg2 g gc -> part_of p gc.
+Lemma ICpart_of1 : forall p g gc, part_of2 p g -> gUnravel2 g gc -> part_of p gc.
 Proof. 
 intros. 
 elim/part_of2_ind2 : H gc H0;intros. 
@@ -216,7 +216,7 @@ move : (@In_zip _ _ g0 gs ecs H0 H8)=>[]. ssa.
 econstructor 4. eauto. forallApp H10 H7. case=>//=.  eauto. 
 Qed.
 
-Lemma ICpart_of2 : forall p gc g, part_of p gc -> Unravelg2 g gc -> part_of2 p g.
+Lemma ICpart_of2 : forall p gc g, part_of p gc -> gUnravel2 g gc -> part_of2 p g.
 Proof. 
 intros. 
 elim/part_of_ind2 : H g H0;intros. 
@@ -229,12 +229,12 @@ move : (@In_zip2 _ _ g es gs H0 H8)=>[]. ssa.
 forallApp H9 H7. case=>[] //=.  eauto. 
 Qed.
 
-Lemma ICpart_of_iff : forall p g gc,  Unravelg2 g gc  ->  part_of2 p g <-> part_of p gc.
+Lemma ICpart_of_iff : forall p g gc,  gUnravel2 g gc  ->  part_of2 p g <-> part_of p gc.
 Proof. intros. split;intros. apply/ICpart_of1. eauto. eauto. 
 apply/ICpart_of2. eauto. eauto. 
 Qed.
 
-Lemma ICpart_of_all1 : forall p g gc, part_of_all2 p g -> Unravelg2 g gc -> part_of_all p gc.
+Lemma ICpart_of_all1 : forall p g gc, part_of_all2 p g -> gUnravel2 g gc -> part_of_all p gc.
 Proof. 
 intros. 
 elim/part_of_all2_ind2 : H gc H0;intros. 
@@ -249,7 +249,7 @@ move : (@In_zip2 _ _ g0 gs ecs H5 H7)=>[]. ssa.
 Qed.
 
 
-Lemma ICpart_of_all2 : forall p gc g, part_of_all p gc -> Unravelg2 g gc -> part_of_all2 p g.
+Lemma ICpart_of_all2 : forall p gc g, part_of_all p gc -> gUnravel2 g gc -> part_of_all2 p g.
 Proof. 
 intros. 
 elim/part_of_all_ind : H g H0;intros. 
@@ -263,12 +263,12 @@ move: (@In_zip _ _ g0 es gs H4 H6)=>[].  ssa. apply/H0.  eauto.
 forallApp H7 H8. case=>[] //=. 
 Qed.
 
-Lemma ICpart_of_all2_iff : forall p g gc,  Unravelg2 g gc  ->  part_of_all2 p g <-> part_of_all p gc.
+Lemma ICpart_of_all2_iff : forall p g gc,  gUnravel2 g gc  ->  part_of_all2 p g <-> part_of_all p gc.
 Proof. intros. split;intros. apply/ICpart_of_all1. eauto. done. 
 apply/ICpart_of_all2. eauto. done. 
 Qed.
 
-Lemma unravel_finite : forall g gc, g << (UnfUnravelg \o Unravelg2_gen) >> gc -> Finite gc. 
+Lemma unravel_finite : forall g gc, g << (UnfgUnravel \o gUnravel2_gen) >> gc -> Finite gc. 
 Proof. 
 pcofix CIH. intros. 
 punfold H0. inv H0. pfold. inv H;pclearbot.  con. eauto. 
@@ -280,17 +280,17 @@ Qed.
 
 
 
-Lemma Rolling_msg : forall a u g0, Rolling (GMsg a u g0) -> Rolling g0. 
+Lemma gInvPred_msg : forall a u g0, gInvPred (GMsg a u g0) -> gInvPred g0. 
 Proof. 
 intros. punfold H. inv H. inv H0. pclearbot. done. 
 Qed.
 
-Lemma Rolling_branch : forall a g gs, Rolling (GBranch a gs) -> In g gs ->  Rolling g. 
+Lemma gInvPred_branch : forall a g gs, gInvPred (GBranch a gs) -> In g gs ->  gInvPred g. 
 Proof. 
 intros. punfold H. inv H. inv H1. forallApp H3 H0. case=>[] //=. 
 Qed.
 
-Hint Resolve Rolling_msg Rolling_branch. 
+Hint Resolve gInvPred_msg gInvPred_branch. 
 
 
 
@@ -300,16 +300,16 @@ elim/part_of2_ind2 : H0 H;intros. punfold H1. inv H1.  rewrite H0 in H2. inv H2;
 apply/H3. con. con. con. done. 
 punfold H3. inv H3. rewrite H2 in H4. inv H4;pclearbot;try comp_disc. 
 apply/H1. pfold. con. con. rewrite -part_of2_iff. eauto. 
-rewrite -Rolling_unf_iff. eauto. 
+rewrite -gInvPred_unf_iff. eauto. 
 punfold H1. inv H1. rewrite H0 in H2. inv H2. comp_disc. 
 apply/H3. con. con. con. done. 
 punfold H4. inv H4. rewrite H3 in H5. inv H5;try comp_disc;pclearbot. 
 move/H11 : H0. ssa. pclearbot. move : H6.  cbn. move/H2. done. 
 apply/H2. pfold. con. con. rewrite -part_of2_iff. eauto. 
-rewrite -Rolling_unf_iff. eauto. 
+rewrite -gInvPred_unf_iff. eauto. 
 Qed.
 
-Lemma ICProject : forall p g e gc ec, Project g p e -> Unravelg2 g gc -> Unravele2 e ec -> CProject gc p ec. 
+Lemma ICProject : forall p g e gc ec, Project g p e -> gUnravel2 g gc -> lUnravel2 e ec -> CProject gc p ec. 
 Proof. 
 move => p. pcofix CIH. intros. apply part_of2_or_end in H0 as Hor. 
 destruct Hor. 
@@ -353,9 +353,9 @@ elim/part_of_all2_ind2 : H H3 gc ec H0 H1;intros.
   apply/ForallP. clear H7. 
 have : forall g : gType,
        In g gs ->
-       forall (gc : gcType) (ec : ecType),
-       Unravelg2_gen (upaco2 (UnfUnravelg \o Unravelg2_gen) bot2) (full_unf g) gc ->
-       Unravele2_gen (upaco2 (UnfUnravele \o Unravele2_gen) bot2) (full_eunf e) ec -> gc <<( r) (cproject_gen p) >> ec.
+       forall (gc : gcType) (ec : lcType),
+       gUnravel2_gen (upaco2 (UnfgUnravel \o gUnravel2_gen) bot2) (full_unf g) gc ->
+       lUnravel2_gen (upaco2 (UnflUnravel \o lUnravel2_gen) bot2) (full_eunf e) ec -> gc <<( r) (cproject_gen p) >> ec.
   intros. apply/H1;eauto. move/H12 : H4. ssa. pclearbot. punfold H9. inv H9. 
   rewrite full_eunf_idemp in H11. done. clear H1. clear H12. 
   move/ForallP. clear H2 H3.  move/ForallP : H0.  
@@ -389,7 +389,7 @@ Proof.
 intros. punfold H. inv H. pfold. con. rewrite full_eunf_idemp //=.  
 Qed.
 
-Lemma Unravelg2_Rol : forall g gc, Unravelg2 g gc -> Rolling g. 
+Lemma gUnravel2_Rol : forall g gc, gUnravel2 g gc -> gInvPred g. 
 Proof. 
 pcofix CIH. intros. punfold H0. inv H0. pfold. con. inv H;pclearbot.
 con. eauto. con;eauto. apply/ForallP=> x xIn. eauto. right.
@@ -398,12 +398,12 @@ forallApp H3 H5. case=>[] //=. ssa. eauto.
 con. 
 Qed.
 
-Lemma Unravelg2_iff : forall e ec r,  e <<( r) (UnfUnravelg \o Unravelg2_gen) >> ec <-> (full_unf e) <<( r) (UnfUnravelg \o Unravelg2_gen) >> ec.
+Lemma gUnravel2_iff : forall e ec r,  e <<( r) (UnfgUnravel \o gUnravel2_gen) >> ec <-> (full_unf e) <<( r) (UnfgUnravel \o gUnravel2_gen) >> ec.
 Proof. intros. split;intros. punfold H. inv H. pfold. con. rewrite full_unf_idemp. done. 
 punfold H. inv H. pfold. con. rewrite full_unf_idemp in H0. done. 
 Qed.
 
-Lemma Unravele2_iff : forall e ec r,  e <<( r) (UnfUnravele \o Unravele2_gen) >> ec <-> (full_eunf e) <<( r) (UnfUnravele \o Unravele2_gen) >> ec.
+Lemma lUnravel2_iff : forall e ec r,  e <<( r) (UnflUnravel \o lUnravel2_gen) >> ec <-> (full_eunf e) <<( r) (UnflUnravel \o lUnravel2_gen) >> ec.
 Proof. intros. split;intros. punfold H. inv H. pfold. con. rewrite full_eunf_idemp. done. 
 punfold H. inv H. pfold. con. rewrite full_eunf_idemp in H0. done. 
 Qed.
@@ -418,7 +418,7 @@ move => a0 l IH. case=>//=.
 intros. destruct H. inv H. auto. move/IH : H. ssa. 
 Qed.
 
-Lemma CIProject : forall p g e gc ec, CProject gc p ec -> Unravelg2 g gc -> Unravele2 e ec -> Project g p e. 
+Lemma CIProject : forall p g e gc ec, CProject gc p ec -> gUnravel2 g gc -> lUnravel2 e ec -> Project g p e. 
 Proof. 
 move => p. pcofix CIH. intros. apply part_of_or_end in H0 as H0'. destruct H0'. 
 elim/part_of_all_ind2 : H ec g e H0 H1 H2;intros. 
@@ -427,15 +427,15 @@ elim/part_of_all_ind2 : H ec g e H0 H1 H2;intros.
   inv H3. pfold. con. rewrite -H5 -H4. con=>//=. right. pclearbot. eauto.    
   punfold H2. inv H2. apply/Project_eunf. inv H5. pfold. con. con. 
   rewrite ICpart_of_iff;eauto. pfold. con. rewrite full_unf_idemp. done. 
-  rewrite -Rolling_unf_iff. apply/Unravelg2_Rol. pfold.  con. eauto. 
+  rewrite -gInvPred_unf_iff. apply/gUnravel2_Rol. pfold.  con. eauto. 
 - punfold H3. inv H3. apply/Project_unfg. inv H5;pc.
   punfold H2. inv H2;try comp_disc;pc. 
-  pfold. con. con=>//=. left. apply/H1;eauto. rewrite -Unravele2_iff.   eauto. 
+  pfold. con. con=>//=. left. apply/H1;eauto. rewrite -lUnravel2_iff.   eauto. 
   apply/ICpart_of_all2_iff;eauto.  
   punfold H4. inv H4. apply/Project_eunf. inv H10.
   pfold. con. apply/project_gen_end. rewrite ICpart_of_iff;eauto.
   rewrite /full_unf /=.  eauto. 
-  pfold. con. con. left. done. cbn. apply/Unravelg2_Rol. pfold. con. con. eauto. 
+  pfold. con. con. left. done. cbn. apply/gUnravel2_Rol. pfold. con. con. eauto. 
 - punfold H1. inv H1. apply/Project_unfg. inv H3. 
   punfold H0. inv H0;try comp_disc;pclearbot. injt. punfold H2. inv H2.
   apply/Project_eunf. inv H5. injt. pfold. con. con=>//=. lia. 
@@ -446,14 +446,14 @@ elim/part_of_all_ind2 : H ec g e H0 H1 H2;intros.
   move => a3 l2 [] Heq [] Heq0 [] Heq1. intros. inv H8. inv H16. inv H12. pclearbot. 
   simpl in *. con;eauto. 
   punfold H2. inv H2. apply/Project_eunf. inv H9. pfold. con. apply/project_gen_end. 
-  rewrite ICpart_of_iff;eauto. rewrite -Unravelg2_iff. pfold.  con. con. lia. done. 
-  rewrite -Rolling_unf_iff. apply/Unravelg2_Rol. pfold. con. con. 2 : eauto. eauto.
+  rewrite ICpart_of_iff;eauto. rewrite -gUnravel2_iff. pfold.  con. con. lia. done. 
+  rewrite -gInvPred_unf_iff. apply/gUnravel2_Rol. pfold. con. con. 2 : eauto. eauto.
 - punfold H3. inv H3.  apply/Project_unfg. inv H5. injt. 
   punfold H2. inv H2;pclearbot;try comp_disc. injt. 
    have :  forall g : gcType,
        In g gs ->
-       forall (ec : ecType) (g0 : gType) (e : endpoint),
-       CProject g p ec -> Unravelg2 g0 g -> Unravele2 e ec -> g0 <<( r) (UnfProj \o project_gen p) >> e. 
+       forall (ec : lcType) (g0 : gType) (e : lType),
+       CProject g p ec -> gUnravel2 g0 g -> lUnravel2 e ec -> g0 <<( r) (UnfProj \o project_gen p) >> e. 
   intros. apply/H1;eauto. clear H1 => H1. 
   move : (@In_zip2 _ _ g0 es gs H12 H9)=>[]. ssa. 
   pfold. con. econstructor=>//=. eauto.
@@ -466,23 +466,23 @@ elim/part_of_all_ind2 : H ec g e H0 H1 H2;intros.
   forallApp H10 H16. case=>[] //=. punfold H4. inv H4. 
   apply/Project_eunf. inv H11. pfold. con. apply/project_gen_end. 
   cbn. rewrite ICpart_of_iff;eauto. pfold. con. con=>//=. 
-  cbn. apply/Unravelg2_Rol. pfold. con. con. 2 : eauto. lia. 
+  cbn. apply/gUnravel2_Rol. pfold. con. con. 2 : eauto. lia. 
 - subst. pfold. con. punfold H2. inv H2. inv H. con. 
   rewrite ICpart_of_iff. apply/CProject_not_part. eauto. 
-  rewrite -Unravelg2_iff //=. 
-  apply/Unravelg2_Rol. rewrite -Unravelg2_iff. eauto. 
+  rewrite -gUnravel2_iff //=. 
+  apply/gUnravel2_Rol. rewrite -gUnravel2_iff. eauto. 
 Qed.
 
 
-Let rwd := (etocoind'_eq, etocoind_eq, g_to_c'_eq, g_to_c_eq). 
+Let rwd := (etocoind'_eq, etocoind_eq, gtocoind'_eq, gtocoind_eq). 
 Ltac seq := rewrite ?eqs -?rwd.
 Ltac seq_in H := rewrite ?eqs -?rwd in H.
 
 
 
-Lemma Project_gtree : forall p g e, Project g p e -> Unravelg2 g (g_to_c g). 
+Lemma Project_gtree : forall p g e, Project g p e -> gUnravel2 g (gtocoind g). 
 Proof. 
-move => p. pcofix CIH. intros. punfold H0. inv H0. rewrite g_to_c_full_unf. apply/Unravelg2_iff.  inv H;seq.  
+move => p. pcofix CIH. intros. punfold H0. inv H0. rewrite gtocoind_full_unf. apply/gUnravel2_iff.  inv H;seq.  
 pfold. con. con. pclearbot.  eauto. 
 pfold. con. 
 con. pclearbot.  eauto. 
@@ -493,40 +493,40 @@ con;eauto.
 pfold. con. con. rewrite size_map //=. 
 move/ForallP : H4. clear H2 H1 H3. elim : gs. 
 simpl. done. move => a0 l IH HH. inv HH. ssa.  pclearbot. con;eauto.
-rewrite -g_to_c_full_unf.  rewrite -Unravelg2_iff.
+rewrite -gtocoind_full_unf.  rewrite -gUnravel2_iff.
 apply/paco2_mon.
-apply/Rolling_iff. rewrite Rolling_unf_iff. done. done. 
+apply/gInvPred_iff. rewrite gInvPred_unf_iff. done. done. 
 Qed. 
 
 
 
-Lemma Project_etree : forall p g e, Project g p e -> Unravele2 e (etocoind e). 
+Lemma Project_etree : forall p g e, Project g p e -> lUnravel2 e (etocoind e). 
 Proof. 
 move => p. pcofix CIH. intros. apply part_of2_or_end in H0 as H0'. 
 destruct H0'. 
 elim/part_of_all2_ind2 : H e H0;intros. 
-punfold H1. inv H1. rewrite H0 in H2. rewrite etocoind_full_eunf.  apply/Unravele2_iff. inv H2;pclearbot;try comp_disc. 
+punfold H1. inv H1. rewrite H0 in H2. rewrite etocoind_full_eunf.  apply/lUnravel2_iff. inv H2;pclearbot;try comp_disc. 
 pfold. seq.  con. con. eauto. pfold. con. seq. con. 
 apply/H1. punfold H3. inv H3. rewrite H2 in H4. inv H4;pclearbot ;try comp_disc. 
 apply/Project_eunf. done. pfold. con. rewrite -H5. con. rewrite -part_of2_iff. eauto. 
-rewrite -Rolling_unf_iff.  eauto. 
-punfold H1. inv H1. rewrite H0 in H2. rewrite etocoind_full_eunf.  apply/Unravele2_iff. inv H2;pclearbot;try comp_disc. 
+rewrite -gInvPred_unf_iff.  eauto. 
+punfold H1. inv H1. rewrite H0 in H2. rewrite etocoind_full_eunf.  apply/lUnravel2_iff. inv H2;pclearbot;try comp_disc. 
 pfold. seq.  con. con. rewrite size_map //=. 
 move/ForallP : H8. clear H5 H0 H2. elim : gs es H7. case=>//=. 
 move => a0 l IH. case=>//=. move => a1 l0 [] Heq. intros. inv H8. pclearbot. simpl in *. 
 con;eauto. 
 seq. pfold. con. con. 
-punfold H3. inv H3. rewrite H2 in H4. rewrite etocoind_full_eunf. apply/Unravele2_iff. inv H4;pclearbot;try comp_disc. 
-rewrite -Unravele2_iff. rewrite -etocoind_full_eunf. apply/H1. eauto. eauto. 
+punfold H3. inv H3. rewrite H2 in H4. rewrite etocoind_full_eunf. apply/lUnravel2_iff. inv H4;pclearbot;try comp_disc. 
+rewrite -lUnravel2_iff. rewrite -etocoind_full_eunf. apply/H1. eauto. eauto. 
 move/H10 : H8. ssa. pclearbot. apply/Project_eunf. done. 
 seq. pfold. con. con. 
-rewrite etocoind_full_eunf. apply/Unravele2_iff. rewrite H. seq. pfold. con. con. 
+rewrite etocoind_full_eunf. apply/lUnravel2_iff. rewrite H. seq. pfold. con. con. 
 Qed.
 
 
-Lemma ICProject_iff : forall g p e, Project g p e <-> exists gc ec, Unravelg2 g gc /\ Unravele2 e ec /\ CProject gc p ec. 
+Lemma ICProject_iff : forall g p e, Project g p e <-> exists gc ec, gUnravel2 g gc /\ lUnravel2 e ec /\ CProject gc p ec. 
 Proof. 
-intros. split. intros. exists (g_to_c g). exists (etocoind e). ssa. 
+intros. split. intros. exists (gtocoind g). exists (etocoind e). ssa. 
 apply/Project_gtree;eauto.  
 apply/Project_etree;eauto.  
 apply/ICProject;eauto. apply/Project_gtree;eauto. apply/Project_etree;eauto.  

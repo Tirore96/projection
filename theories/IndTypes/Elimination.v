@@ -5,17 +5,6 @@ Set Implicit Arguments.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
-(*It is hard to give a mutually inductive nested induction principle*)
-(*
-Scheme gType_ind := Induction for gType Sort Prop 
-with value_ind := Induction for value Sort Prop 
-with mysort_ind := Induction for mysort Sort Prop 
-with endpoint_ind := Induction for endpoint Sort Prop.
-Check gType_ind.
-Combined Scheme gvme_ind from gType_ind,value_ind,mysort_ind,endpoint_ind.
-*)
-
-
 Fixpoint mu_height g :=
 match g with
 | GRec g0 => (mu_height g0).+1
@@ -45,7 +34,7 @@ match g with
 | _ => true
 end.
 
-Fixpoint esize_pred (g : endpoint) :=
+Fixpoint esize_pred (g : lType) :=
 match g with 
 | EMsg _ _ _ e0 => esize_pred e0
 | EBranch _ _ es => (0 < size es) && all esize_pred es
@@ -71,22 +60,22 @@ match g with
 | ERec g0 => eguarded i.+1 g0
 end. 
 
-Fixpoint contractive2 g := 
+Fixpoint gcontractive g := 
 match g with
 | GVar j => true
 | GEnd => true
-| GMsg _ _ g0 => contractive2 g0
-| GBranch  _ gs => all contractive2 gs
-| GRec g0 => (guarded 0 g0) && (contractive2 g0)
+| GMsg _ _ g0 => gcontractive g0
+| GBranch  _ gs => all gcontractive gs
+| GRec g0 => (guarded 0 g0) && (gcontractive g0)
 end. 
 
-Fixpoint econtractive2 g := 
+Fixpoint lcontractive g := 
 match g with
 | EVar j => true
 | EEnd => true
-| EMsg _ _ _ g0 => econtractive2 g0
-| EBranch _ _ gs => all econtractive2 gs
-| ERec g0 => (eguarded 0 g0) && (econtractive2 g0)
+| EMsg _ _ _ g0 => lcontractive g0
+| EBranch _ _ gs => all lcontractive gs
+| ERec g0 => (eguarded 0 g0) && (lcontractive g0)
 end. 
 
 Open Scope nat_scope.
@@ -94,7 +83,6 @@ Fixpoint gsize e :=
 match e with 
 | GMsg  _ _ e0 => (gsize e0).+1
 | GBranch _ es => foldr (fun e0 acc => (gsize e0) + acc ) 2 es
-(*| GRec  e0 =>  (gsize e0).+1*)
 | GRec  e0 =>  (gsize e0) +  (gsize e0)
 | _ => 1
 end.
@@ -139,10 +127,10 @@ Section Elimination.
 
 Variables (Pg : gType -> Type) 
           (Pv : value -> Type) 
-          (Pe : endpoint -> Type) 
+          (Pe : lType -> Type) 
           (Pm : mysort -> Type)
           (P_glist : seq gType -> Type)
-          (P_elist : seq endpoint -> Type)
+          (P_elist : seq lType -> Type)
           (P_mlist : seq mysort -> Type).
 
 Hypothesis Pg_var : (forall n : nat, Pg (GVar n)).
@@ -160,9 +148,9 @@ Hypothesis Pm_sgtype : forall g : gType, Pg g -> Pm (SGType g).
 
 Hypothesis Pe_var : forall n : nat, Pe (EVar n). 
 Hypothesis Pe_end : Pe EEnd. 
-Hypothesis Pe_msg : forall (d : dir) (c : ch) (s : value), Pv s -> forall e : endpoint, Pe e -> Pe (EMsg d c s e).
-Hypothesis Pe_branch : forall (d : dir) (c : ch) (l : seq endpoint), P_elist l  -> Pe (EBranch d c l).
-Hypothesis Pe_rec : forall e : endpoint, Pe e -> Pe (ERec e).
+Hypothesis Pe_msg : forall (d : dir) (c : ch) (s : value), Pv s -> forall e : lType, Pe e -> Pe (EMsg d c s e).
+Hypothesis Pe_branch : forall (d : dir) (c : ch) (l : seq lType), P_elist l  -> Pe (EBranch d c l).
+Hypothesis Pe_rec : forall e : lType, Pe e -> Pe (ERec e).
 
 Hypothesis P_glist_0 : P_glist nil.
 Hypothesis P_glist_cons : forall g, Pg g -> forall l, P_glist l -> P_glist (g::l).
@@ -173,7 +161,6 @@ Hypothesis P_elist_cons : forall e, Pe e -> forall l, P_elist l -> P_elist (e::l
 Hypothesis P_mlist_0 : P_mlist nil.
 Hypothesis P_mlist_cons : forall s, Pm s -> forall l, P_mlist l -> P_mlist (s::l).
 
-(*Maybe used derive mutual induct instead*) 
 Fixpoint gType_rect g : Pg g :=
   let fix seq_gType_rect gs : P_glist gs := 
     match gs with 
@@ -202,21 +189,21 @@ let fix seq_mysort_rect ss : P_mlist ss :=
 in
 match v with 
 | VSeqSort ss => Pv_vst (seq_mysort_rect ss)
-| VLT e p => Pv_vlt (endpoint_rect e) p
+| VLT e p => Pv_vlt (lType_rect e) p
 end
 
-with endpoint_rect e : Pe e :=
-let fix seq_endpoint_rect ss : P_elist ss :=
+with lType_rect e : Pe e :=
+let fix seq_lType_rect ss : P_elist ss :=
  match ss with
   | [::] => P_elist_0
-  | m::ms => P_elist_cons (endpoint_rect m) (seq_endpoint_rect ms)
+  | m::ms => P_elist_cons (lType_rect m) (seq_lType_rect ms)
  end in
 match e with
 | EVar n => Pe_var n
 | EEnd => Pe_end
-| EMsg d c m e => Pe_msg d c (value_rect m) (endpoint_rect e)
-| EBranch d c es => Pe_branch d c (seq_endpoint_rect es)
-| ERec e => Pe_rec  (endpoint_rect e)
+| EMsg d c m e => Pe_msg d c (value_rect m) (lType_rect e)
+| EBranch d c es => Pe_branch d c (seq_lType_rect es)
+| ERec e => Pe_rec  (lType_rect e)
 end.
 
 
@@ -235,17 +222,17 @@ Definition seq_mysort_rect : forall ms, P_mlist ms :=
   | m::ms => P_mlist_cons (mysort_rect m) (seq_mysort_rect ms)
  end.
 
-Definition seq_endpoint_rect : forall es, P_elist es :=
-fix seq_endpoint_rect ss : P_elist ss :=
+Definition seq_lType_rect : forall es, P_elist es :=
+fix seq_lType_rect ss : P_elist ss :=
  match ss with
   | [::] => P_elist_0
-  | m::ms => P_elist_cons (endpoint_rect m) (seq_endpoint_rect ms)
+  | m::ms => P_elist_cons (lType_rect m) (seq_lType_rect ms)
  end.
 
 End Elimination.
 
 
-Combined Scheme mut_ind_aux from gType_rect, mysort_rect, value_rect, endpoint_rect.
+Combined Scheme mut_ind_aux from gType_rect, mysort_rect, value_rect, lType_rect.
 
 
 Inductive ForallT {A : Type} (P : A -> Type) : seq A -> Type :=
@@ -290,18 +277,18 @@ end
 with value_eqb (v0 v1 : value) {struct v0} :=
 match v0, v1 with 
 | VSeqSort s0, VSeqSort s1 => list_eq mysort_eqb s0 s1
-| VLT e0 p0, VLT e1 p1 => endpoint_eqb e0 e1 && ( p0 == p1)
+| VLT e0 p0, VLT e1 p1 => lType_eqb e0 e1 && ( p0 == p1)
 | _ , _ => false
 end 
 
-with endpoint_eqb (e0 e1 : endpoint) {struct e0} :=
+with lType_eqb (e0 e1 : lType) {struct e0} :=
 
 match e0, e1 with
 | EVar n0, EVar n1 => n0 == n1
 | EEnd , EEnd => true
-| EMsg d ch0 s0 e0, EMsg d1 ch1 s1 e1 =>  ((d,ch0) == (d1,ch1))  && (value_eqb s0 s1) && (endpoint_eqb e0 e1)
-| EBranch d0 ch0 s0, EBranch d1 ch1 s1 => ((d0,ch0) == (d1,ch1))  && (list_eq endpoint_eqb s0 s1)
-| ERec e0, ERec e1 => endpoint_eqb e0 e1
+| EMsg d ch0 s0 e0, EMsg d1 ch1 s1 e1 =>  ((d,ch0) == (d1,ch1))  && (value_eqb s0 s1) && (lType_eqb e0 e1)
+| EBranch d0 ch0 s0, EBranch d1 ch1 s1 => ((d0,ch0) == (d1,ch1))  && (list_eq lType_eqb s0 s1)
+| ERec e0, ERec e1 => lType_eqb e0 e1
 | _ , _ => false
 end
 with mysort_eqb (st0 st1 : mysort) {struct st0} :=
@@ -318,18 +305,15 @@ end.
 Section SpecializeElimination. 
 Variables (Pg : gType -> Type) 
           (Pv : value -> Type) 
-          (Pe : endpoint -> Type) 
+          (Pe : lType -> Type) 
           (Ps : mysort -> Type).
 
 
 Definition mut_ind := (@mut_ind_aux Pg Pv Pe Ps (ForallT Pg) (ForallT Pe) (ForallT Ps)).  
-(*(fun gl => forall g, In g gl ->Pg g)
-                                                (fun el => forall e, In e el ->Pe e)
-                                                (fun sl  => forall s, In s sl ->Ps s)). *)
 End SpecializeElimination.
 
 Definition refl (A : Type) (f : A -> A -> bool) := forall a, f a a. 
-Lemma refl_eqbs : refl gType_eqb *  (refl mysort_eqb *  (refl value_eqb *  refl endpoint_eqb)).
+Lemma refl_eqbs : refl gType_eqb *  (refl mysort_eqb *  (refl value_eqb *  refl lType_eqb)).
 Proof. unfold refl.  apply : mut_ind;intros; try split;simpl.
 all : try solve [ lia | ssa | con;auto ].
 ssa.  
@@ -348,7 +332,7 @@ Ltac inject :=  split; [ by move=>-> | by case ].
 Ltac inject2 :=  split;[ case; by move =>->-> | case;by move =>->-> ]. 
 Ltac inject3 := split; [ case;  move=>->; case; move=>->->; done |  case; move =>->->->; done]. 
 
-Lemma axioms_eqbs2 : leib_eq' gType_eqb *  (leib_eq' mysort_eqb *  (leib_eq' value_eqb *  leib_eq' endpoint_eqb)).
+Lemma axioms_eqbs2 : leib_eq' gType_eqb *  (leib_eq' mysort_eqb *  (leib_eq' value_eqb *  leib_eq' lType_eqb)).
 Proof. unfold leib_eq'.  apply : mut_ind;intros; try split;simpl in *.
 -  destruct b;try done. f_equal. lia. 
 -  destruct b;try done. 
@@ -375,7 +359,7 @@ Qed.
 
 Definition leib_eq (A : Type) (f : A -> A -> bool) := forall a b, f a b <-> a = b.
 
-Lemma axioms_eqbs : leib_eq gType_eqb *  (leib_eq mysort_eqb *  (leib_eq value_eqb *  leib_eq endpoint_eqb)).
+Lemma axioms_eqbs : leib_eq gType_eqb *  (leib_eq mysort_eqb *  (leib_eq value_eqb *  leib_eq lType_eqb)).
 Proof.
  split. split;intros. apply axioms_eqbs2=>//=. subst. apply refl_eqbs. 
  split. split;intros. apply axioms_eqbs2=>//=. subst. apply refl_eqbs. 
@@ -391,7 +375,7 @@ intros. destruct (eqb x y) eqn:Heqn.
   apply H1 in H0. rewrite Heqn in H0. done. 
 Qed.
 
-Lemma endpoint_axiom : Equality.axiom endpoint_eqb.
+Lemma lType_axiom : Equality.axiom lType_eqb.
 Proof. move : axioms_eqbs. do ? (case;intro). move/iff_reflect. done. 
 Qed.
 
@@ -407,8 +391,8 @@ Lemma value_axiom : Equality.axiom value_eqb.
 Proof. move : axioms_eqbs. do ? (case;intro). move : a1.  move/iff_reflect.  done. 
 Qed.
 
-Definition endpoint_EqMixin := EqMixin endpoint_axiom.
-Global Canonical endpoint_EqType := EqType endpoint endpoint_EqMixin.
+Definition lType_EqMixin := EqMixin lType_axiom.
+Global Canonical lType_EqType := EqType lType lType_EqMixin.
 
 Definition gType_EqMixin := EqMixin gType_axiom.
 Global Canonical gType_EqType := EqType gType gType_EqMixin.
@@ -422,31 +406,17 @@ Global Canonical value_EqType := EqType value value_EqMixin.
 
 
 Definition true_pred A := fun (_ : A) => nat.
-
-(*Fixpoint inb (A : Type) (f : A -> A -> bool) (a : A) (l : seq A) := 
-match l with
-| [::] => false
-| b :: m => (f a b) || (inb f a m)
-end.*)
-
 Section SpecializeElimination2. 
 Variables (Pg : gType -> Type) 
           (Pv : value -> Type) 
-          (Pe : endpoint -> Type) 
+          (Pe : lType -> Type) 
           (Ps : mysort -> Type).
 
-
-(*(fun gl => forall g, In g gl ->Pg g)
-                                                (fun el => forall e, In e el ->Pe e)
-                                                (fun sl  => forall s, In s sl ->Ps s)). *)
-
-
-
-Definition gType_rect_true := (@gType_rect Pg  (@true_pred value) (@true_pred endpoint) (@true_pred mysort) (fun gl => forall g, g \in  gl ->Pg g)
-                                                (@true_pred (seq endpoint))
+Definition gType_rect_true := (@gType_rect Pg  (@true_pred value) (@true_pred lType) (@true_pred mysort) (fun gl => forall g, g \in  gl ->Pg g)
+                                                (@true_pred (seq lType))
                                                 (@true_pred (seq mysort))).
 
-Definition endpoint_rect_true := (@endpoint_rect (@true_pred gType) (@true_pred value) Pe (@true_pred mysort) (@true_pred (seq gType))
+Definition lType_rect_true := (@lType_rect (@true_pred gType) (@true_pred value) Pe (@true_pred mysort) (@true_pred (seq gType))
                                                 (fun el => forall e,  e \in el -> Pe e)
                                                 (@true_pred (seq mysort))).
 End SpecializeElimination2.
@@ -504,99 +474,20 @@ destruct (eqVneq g1 g0). subst. auto. simpl in H. auto.
 con. con. 
 Qed.
 
-Lemma endpoint_ind
-     : forall (Pe : endpoint -> Prop),
+Lemma lType_ind
+     : forall (Pe : lType -> Prop),
        (forall n : nat, Pe (EVar n)) ->
        Pe EEnd ->
-       (forall e : endpoint, Pe e -> Pe (ERec e)) ->
+       (forall e : lType, Pe e -> Pe (ERec e)) ->
        (forall d c (v : value),
-        forall e : endpoint,
+        forall e : lType,
         Pe e  -> Pe (EMsg d c v e)) ->
-       (forall d c (l : seq endpoint),
+       (forall d c (l : seq lType),
          (forall g, g \in l -> Pe g) -> Pe (EBranch d c l)) ->
-       forall g : endpoint, Pe g.
+       forall g : lType, Pe g.
 Proof.
-intros. apply : endpoint_rect_true;auto.
+intros. apply : lType_rect_true;auto.
 all: try (rewrite /true_pred; constructor). 
 intros.  done. intros. rewrite inE in H6. destruct (orP H6). rewrite (eqP H7). done. 
 auto. 
 Qed.
-
-(*Section Operations.
-Implicit Type g : gType.*)
-(*Fixpoint bound_i (i : nat) g  := 
-match g with 
-| GEnd => true
-| GMsg _ _ g0 => bound_i i g0
-| GBranch _ gs => all (bound_i i) gs
-(*| GPar g0 g1 => (bound_i i g0) && (bound_i i g1)*)
-| GRec g0 => bound_i (S i) g0
-| GVar n => n < i
-end.
-Fixpoint bound_i_e i e := 
-  match e with
-  | EVar n => n < i
-  | EEnd => true
-  | ERec g0 => bound_i_e i.+1 g0
-  | EMsg _ _ _ g0 => bound_i_e i g0
-  | EBranch _ _ gs => all (bound_i_e i) gs
-  end.
-(*Inspired by Francisco*)
-Fixpoint contractive_i (d : nat) g :=
-match g with 
-| GEnd => true
-| GMsg _ _ g0 => contractive_i 0 g0
-| GBranch _ gs => all (contractive_i 0) gs
-(*| GPar g0 g1 => (contractive_i d g0) && (contractive_i d g1)*)
-| GRec g0 => contractive_i (S d) g0
-| GVar n => d <= n
-end. *)
-
-
-
-
-(*Fixpoint mu_height g :=
-match g with
-| GRec g0 => (mu_height g0).+1
-| _ => 0
-end.
-Lemma mu_height_subst : forall g0 g1  i, contractive_i (S i) g0 -> mu_height (substitution i g0 g1) = mu_height g0.
-Proof. 
-elim; try solve [by rewrite /=].
-- rewrite /=. intros. case : (eqVneq n i) H. move=>->. by rewrite ltnn. by rewrite /=. 
-- intros. rewrite /=. f_equal. apply H. done. 
-Qed.
-Definition g_next_aux g := 
-match g with 
-| GMsg a u g0 => Some (a,[::g0])
-| GBranch a gs => Some (a,gs)
-| _ => None
-end.*)
-
-
-(*Notation dec x := (Sumbool.sumbool_of_bool x).
-Equations unf_recs (i : nat) g : gType by wf (mu_height g)  :=
-unf_recs i (GRec g) := if (dec (contractive_i i (GRec g))) is left _  then (unf_recs i (substitution i g (GRec g))) else g;
-unf_recs i g := g.
-Next Obligation.
-rewrite mu_height_subst. done. done.
-Qed.
-Definition g_next g :=
-match unf_recs 0 g with 
-| GMsg _ _ g0 => [::g0]
-| GBranch _ gs => gs
-| _ => [::]
-end.
-Definition act_of_g g :=
-match unf_recs 0 g with 
-| GMsg a _ _ => Some a
-| GBranch a _ => Some a
-| _ => None
-end.*)
-
-(*End Operations.*)
-
-
-(*Derive Inversion gType_inv with gType Sort Prop.
-
-Check gType_inv.*)

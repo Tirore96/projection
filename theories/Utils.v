@@ -88,16 +88,7 @@ Proof.
 move => A. elim. done. intros. simpl. simp findIn. destruct (f a). done. rewrite H. done. 
 Qed. 
 
-
-
-
-(*
-Set Implicit Arguments.
-Unset Strict Implicit.
-Unset Printing Implicit Defensive.*)
-
 Locate Forall.
-
 Notation In := List.In.
 Notation Forall := List.Forall.
 
@@ -168,8 +159,6 @@ Ltac case_if := match goal with
                 | [ |- context[if ?X then _ else _ ]] => let H := fresh in destruct X eqn:H
 
                 end; try (move=>->).
-
-(*Ltac iflia := case_if;*)
 
 Ltac rifliad := (repeat case_if); try done.
 
@@ -361,8 +350,6 @@ Hint Resolve forall_gen_nil.
 
 Definition ForallC {A B : Type} (P : A -> B -> Prop)  es0 es1 := paco2 (forall_gen P) bot2 es0 es1. 
 
-(*Notation "l0 =[ R ]= l1" :=  (paco2 (forall_gen R) bot2 l0 l1)(at level 70). *)
-
 Lemma forall_gen_mon2 : forall (A B : Type) (P0 P1: A -> B -> Prop) (R0 R1 : coseq A -> coseq B -> Prop),
  R0 <2= R1 -> P0 <2= P1 ->  paco2 (forall_gen P0) R0 <2= paco2 (forall_gen  P1) R1. 
 Proof.
@@ -391,7 +378,6 @@ Coercion to_coseq : seq  >-> coseq.
 Definition ForallC1 {A : Type} (P : A ->  Prop) aa := paco2 (forall_gen (fun a _ => P a)) bot2 aa aa. 
 
 Inductive CoIn {A : Type} (eq : A -> A -> Prop) :  A -> coseq A -> Prop :=
-(*| CoInC a a' l : eq a  a' \/ CoIn eq a l ->  CoIn eq a (cocons a' l).*)
 | CoInC1 a a' l : eq a  a' ->  CoIn eq a (cocons a' l)
 | CoInC2 a a' l : CoIn eq a l ->  CoIn eq a (cocons a' l).
 
@@ -552,7 +538,6 @@ Proof.
 intros. rewrite /comap'. done. 
 Qed.
 
-(*Fix f before defining cofixpoint to make g_to_gc pass productivity check*)
 Definition comap {A B : Type} (f : A -> B) := 
  cofix comap (l : coseq A) : coseq B := comap' comap f l. 
 

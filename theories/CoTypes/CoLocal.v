@@ -91,7 +91,7 @@ Qed.
 Lemma unf_eguarded  : forall g n, eguarded n g  -> eunf g <> EVar n.  
 Proof. 
 case=>//=. intros. move => HH. inv HH. lia. 
-intros. destruct e;try done.   move : H. 
+intros. destruct l;try done.   move : H. 
 asimpl. destruct n0. done. asimpl. case. simpl. intros. move=> HH.  inv HH. lia. 
 Qed.
 
@@ -257,17 +257,17 @@ Qed.
 
 
 
-CoInductive ecType :=
+CoInductive lcType :=
  | ECEnd
- | ECMsg : dir -> ch -> value -> ecType -> ecType
- | ECBranch : dir -> ch -> coseq ecType  -> ecType.
+ | ECMsg : dir -> ch -> value -> lcType -> lcType
+ | ECBranch : dir -> ch -> coseq lcType  -> lcType.
 
 
 Lemma ec_match : forall e, e = match e with | ECEnd => ECEnd | ECMsg d a u g0 => ECMsg d a u g0 |  ECBranch d a gs => ECBranch d a gs end. 
 Proof. case;auto. Qed.
 
 
-Definition etocoind' (f : endpoint -> ecType)  g :=
+Definition etocoind' (f : lType -> lcType)  g :=
 match full_eunf g with 
 | EMsg d a u g0 =>  ECMsg d a u (f g0) 
 | EBranch d a gs => ECBranch d a (comap f (to_coseq gs))
@@ -311,7 +311,7 @@ Let eunf_eqs := (full_eunf_end, full_eunf_msg, full_eunf_branch).
 
 Let eqs := (utils.comap_eqs,etocoinds_eqs, eunf_eqs, utils.coeq). 
 
-Inductive EQ_gen  (R : ecType -> ecType -> Prop) : ecType -> ecType -> Prop := 
+Inductive EQ_gen  (R : lcType -> lcType -> Prop) : lcType -> lcType -> Prop := 
  | eq_end : EQ_gen R ECEnd ECEnd
  | eq_msg e0 e1 d c v : R e0 e1 -> EQ_gen R (ECMsg d c v e0) (ECMsg d c v e1)
  | eq_branch es0 es1 d c : (es0 <<(bot2) (forall_gen R)  >> es1)  -> EQ_gen R (ECBranch d c es0) (ECBranch d c es1).
@@ -367,43 +367,43 @@ right. apply/CIH2.  pclearbot. eauto. pclearbot. eauto.
 Qed.
 
 
-Inductive Unravele_gen (R : endpoint -> ecType  -> Prop) : endpoint -> ecType  -> Prop :=
- | Unravele_gen_msg e0 ec d c u : R e0 ec -> Unravele_gen R (EMsg d c u e0) (ECMsg d c u ec)
- | Unravele_gen_branch (es : seq endpoint) (ecs : seq ecType) d c : size es = size ecs -> Forall (R_pair R) (zip es ecs)   -> Unravele_gen R (EBranch d c es) (ECBranch d c ecs)
- | Unravele_gen_rec e ec : Unravele_gen R (e [e ERec e .: EVar]) ec  -> Unravele_gen R (ERec e) ec (*guarded*)
- | Unravele_gen_end : Unravele_gen R EEnd ECEnd.
+Inductive lUnravel_gen (R : lType -> lcType  -> Prop) : lType -> lcType  -> Prop :=
+ | lUnravel_gen_msg e0 ec d c u : R e0 ec -> lUnravel_gen R (EMsg d c u e0) (ECMsg d c u ec)
+ | lUnravel_gen_branch (es : seq lType) (ecs : seq lcType) d c : size es = size ecs -> Forall (R_pair R) (zip es ecs)   -> lUnravel_gen R (EBranch d c es) (ECBranch d c ecs)
+ | lUnravel_gen_rec e ec : lUnravel_gen R (e [e ERec e .: EVar]) ec  -> lUnravel_gen R (ERec e) ec (*guarded*)
+ | lUnravel_gen_end : lUnravel_gen R EEnd ECEnd.
 
 
 
-Lemma Unravele_gen_mon : monotone2 Unravele_gen. 
+Lemma lUnravel_gen_mon : monotone2 lUnravel_gen. 
 Proof. move => x0 x1. intros. induction IN;try done. con;eauto. 
 con;eauto. apply/List.Forall_forall. intros. 
 move/List.Forall_forall : H0. eauto. con. eauto. 
 con. 
 Qed.
 
-Hint Resolve Unravele_gen_mon : paco. 
+Hint Resolve lUnravel_gen_mon : paco. 
 
-Notation Unravele e0 e1 := (paco2 Unravele_gen bot2 e0 e1).
+Notation lUnravel e0 e1 := (paco2 lUnravel_gen bot2 e0 e1).
 
 
 
-Variant Unravele2_gen (R : endpoint -> ecType -> Prop) : endpoint -> ecType  -> Prop :=
- | Unravele2_gen_msg d c e0 ec u :  R e0 ec -> Unravele2_gen R  (EMsg d c u e0) (ECMsg d c u ec)
- | Unravele2_gen_branch c (es : seq endpoint)  (ecs : seq ecType) d : size es = size ecs -> Forall (R_pair R) (zip es ecs)  -> Unravele2_gen R (EBranch d c es)  (ECBranch d c ecs)
- | Unravele2_gen_end :   Unravele2_gen R EEnd  ECEnd.
+Variant lUnravel2_gen (R : lType -> lcType -> Prop) : lType -> lcType  -> Prop :=
+ | lUnravel2_gen_msg d c e0 ec u :  R e0 ec -> lUnravel2_gen R  (EMsg d c u e0) (ECMsg d c u ec)
+ | lUnravel2_gen_branch c (es : seq lType)  (ecs : seq lcType) d : size es = size ecs -> Forall (R_pair R) (zip es ecs)  -> lUnravel2_gen R (EBranch d c es)  (ECBranch d c ecs)
+ | lUnravel2_gen_end :   lUnravel2_gen R EEnd  ECEnd.
 
-Lemma Unravele2_gen_mon : monotone2 Unravele2_gen. 
+Lemma lUnravel2_gen_mon : monotone2 lUnravel2_gen. 
 Proof. move => x0 x1. intros. induction IN;try done. con;eauto. 
 con;eauto. apply/List.Forall_forall. intros. 
 move/List.Forall_forall : H0. eauto. con. 
 Qed.
 
 
-Hint Resolve Unravele2_gen_mon. 
+Hint Resolve lUnravel2_gen_mon. 
 
-Notation UnfUnravele := (ApplyF full_eunf ssrfun.id). 
-Notation Unravele2 e0 e1 := (paco2  (UnfUnravele \o Unravele2_gen) bot2 e0 e1).
+Notation UnflUnravel := (ApplyF full_eunf ssrfun.id). 
+Notation lUnravel2 e0 e1 := (paco2  (UnflUnravel \o lUnravel2_gen) bot2 e0 e1).
 
 Lemma etocoind_full_eunf : forall e, etocoind e = etocoind (full_eunf e). 
 Proof. 
@@ -412,23 +412,23 @@ Qed.
 
 
 
-Lemma Unravele_eunf4 :  forall e ec (R: endpoint -> ecType -> Prop), paco2 Unravele_gen R (eunf e) ec -> paco2 Unravele_gen R e ec.
+Lemma lUnravel_eunf4 :  forall e ec (R: lType -> lcType -> Prop), paco2 lUnravel_gen R (eunf e) ec -> paco2 lUnravel_gen R e ec.
 Proof.
 intros.  destruct e;try done. pfold. constructor. simpl in H. punfold H. 
 Qed.
 
-Lemma Unravele_eunf5 :  forall n e ec (R: endpoint -> ecType -> Prop), paco2 Unravele_gen R (iter n eunf e) ec -> paco2 Unravele_gen R e ec.
+Lemma lUnravel_eunf5 :  forall n e ec (R: lType -> lcType -> Prop), paco2 lUnravel_gen R (iter n eunf e) ec -> paco2 lUnravel_gen R e ec.
 Proof.
-elim. done. intros. simpl in H0. apply Unravele_eunf4 in H0. auto. 
+elim. done. intros. simpl in H0. apply lUnravel_eunf4 in H0. auto. 
 Qed.
 
-Lemma Unravele_eunf6 :  forall e ec (R: endpoint -> ecType -> Prop), paco2 Unravele_gen R (full_eunf e) ec -> paco2 Unravele_gen R e ec.
+Lemma lUnravel_eunf6 :  forall e ec (R: lType -> lcType -> Prop), paco2 lUnravel_gen R (full_eunf e) ec -> paco2 lUnravel_gen R e ec.
 Proof. 
-intros. rewrite /full_eunf in H. apply/Unravele_eunf5.  eauto. 
+intros. rewrite /full_eunf in H. apply/lUnravel_eunf5.  eauto. 
 Qed.
 
 
-Lemma Unravele_iff : forall e ec, Unravele e ec <-> Unravele2 e ec.
+Lemma lUnravel_iff : forall e ec, lUnravel e ec <-> lUnravel2 e ec.
 Proof.
 Proof. intros. split. 
 move : e ec. pcofix CIH. 
@@ -437,20 +437,20 @@ constructor. rewrite /full_eunf /=.  constructor. eauto.
 pfold. constructor. rewrite /full_eunf /=. constructor. done. 
 induction H0;auto. constructor. pclearbot. eauto. eauto.  
 pfold. constructor. rewrite full_eunf_subst. 
-punfold IHUnravele_gen. inv IHUnravele_gen. done.
+punfold IHlUnravel_gen. inv IHlUnravel_gen. done.
 pfold. constructor. rewrite /full_eunf. constructor.
 intros. 
 move : e ec H.  pcofix CIH. intros. punfold H0. inv H0. 
-inv H. apply/Unravele_eunf6. rewrite -H1. pfold. constructor. 
+inv H. apply/lUnravel_eunf6. rewrite -H1. pfold. constructor. 
 right. apply/CIH. pclearbot. done. 
-apply/Unravele_eunf6. rewrite -H1. pfold. constructor. done. 
+apply/lUnravel_eunf6. rewrite -H1. pfold. constructor. done. 
 induction H3;auto. pclearbot. eauto. 
-apply/Unravele_eunf6. rewrite -H2. pfold. constructor. 
+apply/lUnravel_eunf6. rewrite -H2. pfold. constructor. 
 Qed.
 
 
 
-Lemma Unravele_uniq : forall e ec0 ec1, Unravele2 e ec0 ->  Unravele2 e ec1 -> ec0 << EQ_gen >> ec1. 
+Lemma lUnravel_uniq : forall e ec0 ec1, lUnravel2 e ec0 ->  lUnravel2 e ec1 -> ec0 << EQ_gen >> ec1. 
 Proof. 
 pcofix CIH. intros. punfold H0. punfold H1. inv H0. inv H1. inv H;pclearbot.
 rewrite -H3 in H2. inv H2;pc.  inv H10;try done. right. apply/CIH. eauto. eauto.
@@ -465,7 +465,7 @@ rewrite -H4 in H2. inv H2.
 pfold. con. 
 Qed.
 
-Lemma Unravele_eq : forall g gc0 gc1, gc0 << EQ_gen >> gc1 ->  Unravele2 g gc0 ->  Unravele2 g gc1.
+Lemma lUnravel_eq : forall g gc0 gc1, gc0 << EQ_gen >> gc1 ->  lUnravel2 g gc0 ->  lUnravel2 g gc1.
 Proof.
 pcofix CIH. 
 intros. punfold H1. pfold.   constructor. inv H1. induction H;pclearbot. uis H0.
@@ -490,7 +490,7 @@ Qed.
 
 
 (*Later perhaps do it with gpaco*)
-Lemma unravele_exist : forall e,  Unravele2 e (etocoind e) <-> exists ec, Unravele2 e  ec.
+Lemma unravele_exist : forall e,  lUnravel2 e (etocoind e) <-> exists ec, lUnravel2 e  ec.
 Proof. 
 intros. split. 
 intros. exists (etocoind e).  done.
@@ -624,7 +624,7 @@ rewrite -map_comp. f_equal.  rewrite /comp. apply/eq_in_map=> x xIn.
 apply/H.  done. 
 Qed.
  
-Lemma enum_subst : forall e e' sigma (S : seq endpoint), (forall n e0, ~~ is_evar (sigma n) -> e0 \in enum (sigma n) -> e0 \in S) -> e' \in enum e [e sigma] -> e' \in map (fun e0 =>  e0 [e sigma]) (enum e) \/ e' \in S. 
+Lemma enum_subst : forall e e' sigma (S : seq lType), (forall n e0, ~~ is_evar (sigma n) -> e0 \in enum (sigma n) -> e0 \in S) -> e' \in enum e [e sigma] -> e' \in map (fun e0 =>  e0 [e sigma]) (enum e) \/ e' \in S. 
 Proof. 
 elim;rewrite //=;intros. 
 destruct (is_evar (sigma n)) eqn:Heqn. destruct (sigma n);try done. simpl in H0. rewrite inE in H0. rewrite (eqP H0). 
@@ -701,7 +701,7 @@ done.
 Qed.
 
 
-Inductive EQ2_gen  (R : endpoint  -> endpoint  -> Prop) : endpoint  -> endpoint  -> Prop := 
+Inductive EQ2_gen  (R : lType  -> lType  -> Prop) : lType  -> lType  -> Prop := 
  | eq_end2 : EQ2_gen R EEnd EEnd
  | eq_msg2 e0 e1 d c v : R e0 e1 -> EQ2_gen R (EMsg d c v e0) (EMsg d c v e1)
  | eq_branch2 es0 es1 d c : size es0 = size es1 -> Forall (fun p => R p.1 p.2) (zip es0 es1)  -> 
@@ -722,7 +722,7 @@ Notation EQ2 := (fun e0 e1 => paco2 ((ApplyF full_eunf full_eunf) \o EQ2_gen) bo
 
 Ltac pc := pclearbot.
 
-Lemma EQ2_spec1 : forall e0 e1 ec0 ec1, Unravele2 e0 ec0 -> Unravele2 e1 ec1 ->  EQ2 e0 e1 -> paco2 EQ_gen bot2 ec0 ec1. 
+Lemma EQ2_spec1 : forall e0 e1 ec0 ec1, lUnravel2 e0 ec0 -> lUnravel2 e1 ec1 ->  EQ2 e0 e1 -> paco2 EQ_gen bot2 ec0 ec1. 
 Proof. 
 pcofix CIH. intros. punfold H0. punfold H1. punfold H2.
 inv H0. clear H0. 
@@ -741,7 +741,7 @@ intros. inv H4.  inv H10.  inv H12. inv H5.  inv H11. inv H13. con; eauto. simpl
 eauto. 
 Qed. 
 
-Lemma EQ2_spec2 : forall e0 e1 ec0 ec1, Unravele2 e0 ec0 -> Unravele2 e1 ec1 -> paco2 EQ_gen bot2 ec0 ec1 -> EQ2 e0 e1. 
+Lemma EQ2_spec2 : forall e0 e1 ec0 ec1, lUnravel2 e0 ec0 -> lUnravel2 e1 ec1 -> paco2 EQ_gen bot2 ec0 ec1 -> EQ2 e0 e1. 
 Proof. 
 pcofix CIH. intros. punfold H0. punfold H1. punfold H2.
 inv H0. clear H0. 
@@ -783,22 +783,22 @@ intros. punfold H. inv H. pfold. con. rewrite full_eunf_idemp. done.
 Qed.
 
 
-Inductive Rollinge_gen (R : endpoint ->  Prop) : endpoint   -> Prop :=
- | role_gen_msg e0 c d u :  R e0 -> Rollinge_gen R  (EMsg d c u e0) 
- | role_gen_branch c (es : seq endpoint)  d :  Forall R es -> Rollinge_gen R (EBranch d c es) 
- | role_gen_end :   Rollinge_gen R EEnd.
+Inductive lInvPred_gen (R : lType ->  Prop) : lType   -> Prop :=
+ | role_gen_msg e0 c d u :  R e0 -> lInvPred_gen R  (EMsg d c u e0) 
+ | role_gen_branch c (es : seq lType)  d :  Forall R es -> lInvPred_gen R (EBranch d c es) 
+ | role_gen_end :   lInvPred_gen R EEnd.
 
-Lemma Rollinge_gen_mon : monotone1 Rollinge_gen. 
+Lemma lInvPred_gen_mon : monotone1 lInvPred_gen. 
 Proof. move => x0 x1. intros. induction IN;try done. con;eauto. 
 con;eauto. apply/List.Forall_forall. intros. eauto. 
 move/List.Forall_forall : H. eauto. con. 
 Qed. 
 
 
-Hint Resolve Rollinge_gen_mon : paco. 
-Notation Rollinge := (paco1 (ApplyF1 full_eunf \o Rollinge_gen) bot1).  
+Hint Resolve lInvPred_gen_mon : paco. 
+Notation lInvPred := (paco1 (ApplyF1 full_eunf \o lInvPred_gen) bot1).  
 
-Lemma EQ2_tree : forall e0 e1, EQ2 e0 e1 -> Rollinge e0.
+Lemma EQ2_tree : forall e0 e1, EQ2 e0 e1 -> lInvPred e0.
 Proof. 
 pcofix CIH. intros. 
 punfold H0. inv H0. pfold. con. inv H. con. con. pc.  eauto. 
@@ -806,7 +806,7 @@ con. clear H1 H2. elim : es0 es1 H3 H4. case. done. done.
 move => a l IH [] //=. intros. inv H3. inv H4. pc. simpl in *. con; eauto. 
 Qed. 
 
-Lemma EQ2_tree2 : forall e0 e1, EQ2 e0 e1 -> Rollinge e1.
+Lemma EQ2_tree2 : forall e0 e1, EQ2 e0 e1 -> lInvPred e1.
 Proof. 
 pcofix CIH. intros. 
 punfold H0. inv H0. pfold. con. inv H. con. con. pc.  eauto. 
@@ -814,7 +814,7 @@ con. clear H1 H2. elim : es0 es1 H3 H4. case. done. done.
 move => a l IH [] //=. intros. inv H3. inv H4. pc. simpl in *. con; eauto. 
 Qed. 
 
-Lemma Rolling_Unravele : forall g ,  Rollinge g -> Unravele2 g (etocoind g).
+Lemma lInvPred_lUnravel : forall g ,  lInvPred g -> lUnravel2 g (etocoind g).
 Proof. 
 pcofix CIH. intros. punfold H0. inv H0. pfold.
 rewrite etocoind_full_eunf.  con. 
@@ -827,56 +827,56 @@ con.
 Qed.
 
 
-Inductive Rollinge2_gen (R : endpoint ->  Prop) : endpoint   -> Prop :=
- | role2_gen_rec e  :  Rollinge2_gen R (e [e ERec e .: EVar]) -> Rollinge2_gen R  (ERec e) 
- | role2_gen_msg e0 c d u :  R e0 -> Rollinge2_gen R  (EMsg d c u e0) 
- | role2_gen_branch c (es : seq endpoint)  d :  Forall R es -> Rollinge2_gen R (EBranch d c es) 
- | role2_gen_end :   Rollinge2_gen R EEnd
- | role2_gen_var  n :   Rollinge2_gen R (EVar n).
+Inductive lInvPred2_gen (R : lType ->  Prop) : lType   -> Prop :=
+ | role2_gen_rec e  :  lInvPred2_gen R (e [e ERec e .: EVar]) -> lInvPred2_gen R  (ERec e) 
+ | role2_gen_msg e0 c d u :  R e0 -> lInvPred2_gen R  (EMsg d c u e0) 
+ | role2_gen_branch c (es : seq lType)  d :  Forall R es -> lInvPred2_gen R (EBranch d c es) 
+ | role2_gen_end :   lInvPred2_gen R EEnd
+ | role2_gen_var  n :   lInvPred2_gen R (EVar n).
 
-Notation Rollinge2 := (paco1 Rollinge2_gen bot1).  
+Notation lInvPred2 := (paco1 lInvPred2_gen bot1).  
 
-Lemma Rollinge2_gen_mon : monotone1 Rollinge2_gen. 
+Lemma lInvPred2_gen_mon : monotone1 lInvPred2_gen. 
 Proof. move => x0 x1. intros. induction IN;try done. con;eauto. 
 con;eauto. con;eauto. apply/List.Forall_forall. intros. eauto. 
 move/List.Forall_forall : H. eauto. con. con. 
 Qed. 
 
 
-Hint Resolve Rollinge2_gen_mon : paco. 
+Hint Resolve lInvPred2_gen_mon : paco. 
 
 
-Lemma Unravele_Rollinge2 : forall g gc, Unravele g gc -> Rollinge2 g. 
+Lemma lUnravel_lInvPred2 : forall g gc, lUnravel g gc -> lInvPred2 g. 
 Proof. 
 pcofix CIH.  intros. punfold H0. induction H0;pclearbot. 
 pfold. con. right. eauto. pfold. con. 
 elim : es ecs H H0. case=> //=. intros.  destruct ecs;try done. 
 inv H1.  pclearbot . ssa.  con;eauto. pfold.  con. simpl. 
-punfold IHUnravele_gen. pfold.  con. 
+punfold IHlUnravel_gen. pfold.  con. 
 Qed.
 
-Lemma Unravele_Rollinge12 : forall g, Rollinge g -> Rollinge2 g. 
-Proof. intros. apply/Unravele_Rollinge2. apply/Unravele_iff. apply/Rolling_Unravele. done. 
+Lemma lUnravel_lInvPred12 : forall g, lInvPred g -> lInvPred2 g. 
+Proof. intros. apply/lUnravel_lInvPred2. apply/lUnravel_iff. apply/lInvPred_lUnravel. done. 
 Qed. 
 
-Theorem EQ2_spec : forall e0 e1, EQ2 e0 e1 <-> exists ec0 ec1, Unravele2 e0 ec0 /\ Unravele2 e1 ec1 /\ paco2 EQ_gen bot2 ec0 ec1. 
+Theorem EQ2_spec : forall e0 e1, EQ2 e0 e1 <-> exists ec0 ec1, lUnravel2 e0 ec0 /\ lUnravel2 e1 ec1 /\ paco2 EQ_gen bot2 ec0 ec1. 
 Proof. 
 intros. split. intros. exists (etocoind e0). exists (etocoind e1). ssa. 
-apply/Rolling_Unravele/EQ2_tree. eauto. 
-apply/Rolling_Unravele/EQ2_tree2. eauto. apply/EQ2_spec1.
-apply/Rolling_Unravele. apply/EQ2_tree. eauto. 
-apply/Rolling_Unravele. apply/EQ2_tree2. eauto. done. 
+apply/lInvPred_lUnravel/EQ2_tree. eauto. 
+apply/lInvPred_lUnravel/EQ2_tree2. eauto. apply/EQ2_spec1.
+apply/lInvPred_lUnravel. apply/EQ2_tree. eauto. 
+apply/lInvPred_lUnravel. apply/EQ2_tree2. eauto. done. 
 case. move => x. case. intros. ssa. apply/EQ2_spec2. eauto. eauto. done. 
 Qed. 
 
 
-Lemma Rollinge_iff : forall g, Rollinge g <-> Rollinge (full_eunf g). 
+Lemma lInvPred_iff : forall g, lInvPred g <-> lInvPred (full_eunf g). 
 Proof. 
 intros. split. intros. punfold H. inv H. pfold. con. rewrite full_eunf_idemp. done. 
 intros. punfold H. inv H. rewrite full_eunf_idemp in H0. pfold. con. done. 
 Qed.
 
-Lemma EQ2_refl : forall g, Rollinge g ->  g << (ApplyF full_eunf full_eunf \o  EQ2_gen)  >>  g. 
+Lemma EQ2_refl : forall g, lInvPred g ->  g << (ApplyF full_eunf full_eunf \o  EQ2_gen)  >>  g. 
 Proof. 
 pcofix CIH. intros. punfold H0. inv H0. pfold.  con. inv H. 
 con. pclearbot. eauto. con. lia. clear H1. elim : es H2. simpl. done. 
@@ -884,7 +884,7 @@ simpl. intros. inv H2. pclearbot. con;eauto.
 con. 
 Qed.
 
-Lemma EQ2_reflr : forall g r, Rollinge g ->  g <<(r) (ApplyF full_eunf full_eunf \o  EQ2_gen)  >>  g. 
+Lemma EQ2_reflr : forall g r, lInvPred g ->  g <<(r) (ApplyF full_eunf full_eunf \o  EQ2_gen)  >>  g. 
 Proof. 
 pcofix CIH. intros. punfold H0. inv H0. pfold.  con. inv H. 
 con. pclearbot. eauto. con. lia. clear H1. elim : es H2. simpl. done. 
@@ -898,16 +898,16 @@ match e with
 | _ => true
 end.  
 
-Fixpoint endpoint_fv2 e :=
+Fixpoint lType_fv2 e :=
   match e with
   | EVar j => [:: j]
   | EEnd => nil
-  | EMsg _ _ _ g0 => endpoint_fv2 g0
-  | EBranch _ _ gs => flatten (map endpoint_fv2 gs)
-  | ERec g0 => map predn (filter (fun n => n != 0) (endpoint_fv2 g0))
+  | EMsg _ _ _ g0 => lType_fv2 g0
+  | EBranch _ _ gs => flatten (map lType_fv2 gs)
+  | ERec g0 => map predn (filter (fun n => n != 0) (lType_fv2 g0))
   end.
 
-Definition eclosed e := forall n, n \notin endpoint_fv2 e.
+Definition eclosed e := forall n, n \notin lType_fv2 e.
 
 
 Lemma eguarded_sig2 : forall g sigma sigma' i, eguarded i g [e sigma] -> (forall n, eguarded i (sigma n) -> eguarded i (sigma' n)) -> eguarded i g [e sigma'].
@@ -922,14 +922,14 @@ Qed.
 
 
 
-Lemma  eguarded_fv : forall g v, v \notin endpoint_fv2 g -> eguarded v g.
+Lemma  eguarded_fv : forall g v, v \notin lType_fv2 g -> eguarded v g.
 Proof.
 elim;rewrite /=;try done;intros.
 rewrite !inE in H. lia.
 apply H. move : H0. intros. apply/negP=>HH'. apply/negP. apply H0. apply/mapP. exists v.+1. rewrite mem_filter. ssa. done. 
 Qed.
  
-Lemma inotin : forall g i sigma, (forall n, i !=  sigma n) -> i \notin endpoint_fv2 g ⟨e sigma ⟩.
+Lemma inotin : forall g i sigma, (forall n, i !=  sigma n) -> i \notin lType_fv2 g ⟨e sigma ⟩.
 Proof.
 elim;rewrite /=;try done;intros. rewrite !inE. specialize H with n. lia.
 apply/negP. move/mapP. case. ssa. subst. rewrite mem_filter in p. ssa. 
@@ -939,7 +939,7 @@ apply/negP. move/flattenP. case. move=> x. rewrite -map_comp. move/mapP.  case. 
 apply/negP. apply/H. eauto. eauto. done. 
 Qed.
 
-Lemma econtractive2_ren : forall g sigma, injective sigma -> (forall n, n <= sigma n) ->  econtractive2  g -> econtractive2 g ⟨e sigma ⟩.
+Lemma lcontractive_ren : forall g sigma, injective sigma -> (forall n, n <= sigma n) ->  lcontractive  g -> lcontractive g ⟨e sigma ⟩.
 Proof.
 elim;intros;simpl;try done. 
 asimpl. split_and. have : 0 = ( 0 .: sigma >> succn) 0. done. intros. rewrite {1}x.
@@ -948,36 +948,36 @@ rewrite all_map. apply/allP. intro. intros. simpl. apply H. done.  done. done.  
 Qed.
 
 
-Lemma econtractive2_subst : forall g sigma,econtractive2 g -> (forall n, econtractive2 (sigma n)) -> econtractive2 g [e sigma].
+Lemma lcontractive_subst : forall g sigma,lcontractive g -> (forall n, lcontractive (sigma n)) -> lcontractive g [e sigma].
 Proof. 
 elim;rewrite /=;intros;try done. 
 asimpl. split_and. 
 apply/eguarded_sig2.
 instantiate (1 := (EVar 0 .: EVar  >>  ⟨e ↑ ⟩)).  asimpl. done.
 case. done. simpl. intros. apply/eguarded_fv. asimpl. apply/inotin. done.
-apply H. done.  intros. destruct n.  done. simpl. asimpl.  apply/econtractive2_ren. done. done. done.
+apply H. done.  intros. destruct n.  done. simpl. asimpl.  apply/lcontractive_ren. done. done. done.
 apply H. done.  intros. done. 
 rewrite all_map. apply/allP. intro. intros. simpl. apply H. done. apply (allP H0). done. done.
 Qed.
 
 
-Lemma econtractive_unf : forall g , econtractive2 g -> econtractive2 (eunf g). 
+Lemma econtractive_unf : forall g , lcontractive g -> lcontractive (eunf g). 
 Proof.
-intros. rewrite /eunf. destruct g;try done. apply/econtractive2_subst. ssa. case;done. 
+intros. rewrite /eunf. destruct g;try done. apply/lcontractive_subst. ssa. case;done. 
 Qed.
 
-Lemma econtractive_iter_unf : forall k g , econtractive2 g -> econtractive2 (iter k eunf g). 
+Lemma econtractive_iter_unf : forall k g , lcontractive g -> lcontractive (iter k eunf g). 
 Proof.
 elim;try done. intros. simpl. apply/econtractive_unf. ssa. 
 Qed.
 
-Lemma econtractive_full_eunf : forall g , econtractive2 g -> econtractive2 (full_eunf g). 
+Lemma econtractive_full_eunf : forall g , lcontractive g -> lcontractive (full_eunf g). 
 Proof. 
 intros. rewrite /full_eunf. apply/econtractive_iter_unf. done. 
 Qed.
 
 
-Lemma econtractive2_subst2 : forall g sigma,econtractive2 g [e sigma] -> econtractive2 g. 
+Lemma lcontractive_subst2 : forall g sigma,lcontractive g [e sigma] -> lcontractive g. 
 Proof. 
 elim;rewrite /=;intros;try done.  ssa. apply/eguarded_subst2.  eauto. simpl. done. eauto. 
 eauto. apply/allP=> x xIn. apply/H. done. rewrite all_map in H0. apply (allP H0). done. 
@@ -993,36 +993,36 @@ move : H. rewrite /funcomp. intros. suff :  sigma' n != i.  lia. apply : H1. lia
 Qed.
 
 
-Lemma econtractive2_ren2 : forall g sigma, econtractive2 g ⟨e sigma⟩ -> econtractive2 g. 
+Lemma lcontractive_ren2 : forall g sigma, lcontractive g ⟨e sigma⟩ -> lcontractive g. 
 Proof. 
 elim;intros;ssa. eapply (@eguarded_sig2_ren _ _ id) in H1. move : H1. asimpl. done.
 asimpl.  rewrite /id. intros. apply/eqP.  move => HH. subst. simpl in H0. done. eauto. 
 eauto. apply/allP=> x xIn.  rewrite all_map in H0.  eapply H.  eauto.  apply (allP H0).  done. 
 Qed .
 
-Lemma econtractive2_subst3 : forall g sigma n, econtractive2 g [e sigma] -> n \in endpoint_fv2 g -> econtractive2 (sigma n).
+Lemma lcontractive_subst3 : forall g sigma n, lcontractive g [e sigma] -> n \in lType_fv2 g -> lcontractive (sigma n).
 Proof. 
 elim;rewrite /=;intros;try done. rewrite inE in H0. rewrite (eqP H0). done. 
 move/mapP : H1. case. intros. subst. rewrite mem_filter in p. ssa. destruct x. ssa. ssa.
 eapply H in H4.  2: eauto. simpl in H4. move : H4. asimpl.
-move/econtractive2_ren2.  done. eauto.
+move/lcontractive_ren2.  done. eauto.
 move/flattenP : H1.   case.  intros. move/mapP : p.   case.  intros. subst. 
 apply/H.  eauto. rewrite all_map in H0. apply (allP H0).  done. done.  
 Qed. 
 
-Lemma endpoint_fv2_ren : forall g sigma, (endpoint_fv2 g ⟨e sigma⟩) = map sigma (endpoint_fv2 g). 
+Lemma lType_fv2_ren : forall g sigma, (lType_fv2 g ⟨e sigma⟩) = map sigma (lType_fv2 g). 
 Proof. 
 elim;rewrite //=;intros. 
 rewrite -!map_comp. rewrite H.
 rewrite filter_map /=. clear H. asimpl. 
-elim : (endpoint_fv2 e). done. ssa. 
+elim : (lType_fv2 e). done. ssa. 
 destruct (eqVneq a 0). subst. simpl. ssa. 
 simpl. destruct a. done. simpl. f_equal. done. 
 rewrite -!map_comp. rewrite map_flatten. rewrite -!map_comp. 
 f_equal. apply/eq_in_map=> x xIn. simpl. auto. 
 Qed.
 
-Lemma endpoint_fv2_subst : forall g sigma, (endpoint_fv2 g [e sigma]) = flatten (map (sigma >> endpoint_fv2) (endpoint_fv2 g)). 
+Lemma lType_fv2_subst : forall g sigma, (lType_fv2 g [e sigma]) = flatten (map (sigma >> lType_fv2) (lType_fv2 g)). 
 Proof. 
 elim;rewrite //=;intros. 
 rewrite cats0. asimpl. done. 
@@ -1031,13 +1031,13 @@ asimpl. Search _ ((filter _ (flatten _))). rewrite filter_flatten.
 rewrite -!map_comp. rewrite !map_flatten.
 rewrite -map_comp.
 rewrite /comp. asimpl. clear H.
-elim : ( endpoint_fv2 e);try done. ssa. 
+elim : ( lType_fv2 e);try done. ssa. 
 destruct (eqVneq a 0). simpl. subst. simpl. done. 
 simpl. destruct a. done. simpl.
-f_equal. asimpl. rewrite endpoint_fv2_ren. 
+f_equal. asimpl. rewrite lType_fv2_ren. 
 rewrite filter_map /=. rewrite -map_comp.
 clear i.  clear H. 
-elim : ( endpoint_fv2 (sigma a));try done. ssa. 
+elim : ( lType_fv2 (sigma a));try done. ssa. 
 f_equal. done. done.  
 
 rewrite -map_comp. 
@@ -1050,13 +1050,13 @@ Qed.
 
 
 
-Lemma endpoint_fv2_eunf : forall g n, (n \in endpoint_fv2 g) = (n \in endpoint_fv2 (eunf g)).  
+Lemma lType_fv2_eunf : forall g n, (n \in lType_fv2 g) = (n \in lType_fv2 (eunf g)).  
 Proof. 
-case=>//=. intros. rewrite endpoint_fv2_subst. 
+case=>//=. intros. rewrite lType_fv2_subst. 
 apply/eq_iff. split. move/mapP=>[] x /=. rewrite mem_filter. ssa. subst. 
 apply/flattenP. destruct x;try done. simpl. 
-have : ((ERec e .: EVar) >> endpoint_fv2) = 
-([seq i.-1 | i <- endpoint_fv2 e & i != 0] .: fun n => [::n]).
+have : ((ERec l .: EVar) >> lType_fv2) = 
+([seq i.-1 | i <- lType_fv2 l & i != 0] .: fun n => [::n]).
 asimpl. simpl. f_equal. move=>->.
 exists ([::x]). 
 apply/mapP. exists x.+1. ssa. simpl. done. done. 
@@ -1065,29 +1065,29 @@ move : q0. asimpl. simpl. rewrite inE. move/eqP. intros. subst. apply/mapP. exis
 rewrite mem_filter. ssa. 
 Qed.
 
-Lemma endpoint_fv2_full_eunf : forall g n, (n \in endpoint_fv2 g) = (n \in endpoint_fv2 (full_eunf g)).  
+Lemma lType_fv2_full_eunf : forall g n, (n \in lType_fv2 g) = (n \in lType_fv2 (full_eunf g)).  
 Proof. 
 intros. rewrite /full_eunf. remember (emu_height g). clear Heqn0. elim : n0 g. done. 
-intros. rewrite iterS. rewrite H. apply/endpoint_fv2_eunf. 
+intros. rewrite iterS. rewrite H. apply/lType_fv2_eunf. 
 Qed.
 
-Lemma econtractive_unf2 : forall g , econtractive2 (eunf g) -> econtractive2 g. 
+Lemma econtractive_unf2 : forall g , lcontractive (eunf g) -> lcontractive g. 
 Proof.
 intros. rewrite /eunf. destruct g;try done. ssa. 
 destruct (eguarded 0 g) eqn:Heqn. done. 
-eapply (@econtractive2_subst3 _ _ 0) in H. ssa. rewrite Heqn in H0.  done.
-rewrite endpoint_fv2_full_eunf. 
+eapply (@lcontractive_subst3 _ _ 0) in H. ssa. rewrite Heqn in H0.  done.
+rewrite lType_fv2_full_eunf. 
 
 apply eguarded_unfv in Heqn as Heqn'. rewrite Heqn' /= !inE //=.
-apply econtractive2_subst2 in H.  done. 
+apply lcontractive_subst2 in H.  done. 
 Qed. 
 
-Lemma econtractive_full_unf2 : forall g , econtractive2 (full_eunf g) -> econtractive2 g. 
+Lemma econtractive_full_unf2 : forall g , lcontractive (full_eunf g) -> lcontractive g. 
 Proof. intros. rewrite /full_eunf in H. remember (emu_height g). clear Heqn. 
 elim : n g H. done. ssa. apply/econtractive_unf2. apply/H.  rewrite -iterSr /=. done. 
 Qed.
 
-Lemma econtractive_full_unf2_eq : forall g , econtractive2 g = econtractive2 (full_eunf g). 
+Lemma econtractive_full_unf2_eq : forall g , lcontractive g = lcontractive (full_eunf g). 
 Proof. intros. apply/eq_iff. split. apply/econtractive_full_eunf.
 apply/econtractive_full_unf2. 
 Qed.

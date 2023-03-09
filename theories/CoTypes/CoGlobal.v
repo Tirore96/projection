@@ -91,35 +91,35 @@ Lemma gc_match : forall g, g = match g with | GCEnd => GCEnd | GCMsg a u g0 => G
 Proof. case;auto. Qed.
 
 
-Definition g_to_c' (f : gType -> gcType)  g :=
+Definition gtocoind' (f : gType -> gcType)  g :=
 match full_unf g with 
 | GMsg a u g0 =>  GCMsg a u (f g0) 
 | GBranch a gs => GCBranch a (comap f (to_coseq gs))
 | _  => GCEnd
 end.
 
-CoFixpoint g_to_c g := g_to_c' g_to_c g. 
+CoFixpoint gtocoind g := gtocoind' gtocoind g. 
 
-Lemma g_to_c'_eq g : g_to_c' g_to_c g = match full_unf g with 
-| GMsg a u g0 =>  GCMsg a u (g_to_c g0) 
-| GBranch a gs => GCBranch a (map g_to_c gs)
+Lemma gtocoind'_eq g : gtocoind' gtocoind g = match full_unf g with 
+| GMsg a u g0 =>  GCMsg a u (gtocoind g0) 
+| GBranch a gs => GCBranch a (map gtocoind gs)
 | _  => GCEnd
 end.
 Proof. 
-rewrite /g_to_c'. destruct (full_unf g);try done. 
+rewrite /gtocoind'. destruct (full_unf g);try done. 
 f_equal. elim : l. simpl. rewrite !utils.coeq comap_eq //=. 
 intros. rewrite utils.coeq. rewrite utils.comap_eqs /=. rewrite utils.coeq.  f_equal. done. 
 Qed.
 
-Lemma g_to_c_eq g : g_to_c g = g_to_c' g_to_c g. 
+Lemma gtocoind_eq g : gtocoind g = gtocoind' gtocoind g. 
 Proof. 
-intros. rewrite /g_to_c'.  rewrite (gc_match (g_to_c g)). 
+intros. rewrite /gtocoind'.  rewrite (gc_match (gtocoind g)). 
 destruct g;try done;simpl. 
-rewrite /g_to_c'. 
+rewrite /gtocoind'. 
 destruct (full_unf (GRec g));try done. 
 Qed.
 
-Let g_to_cs_eqs := (g_to_c'_eq, g_to_c_eq). 
+Let gtocoinds_eqs := (gtocoind'_eq, gtocoind_eq). 
 
 Lemma full_unf_end  : full_unf GEnd = GEnd.  
 Proof. done. Qed.
@@ -133,56 +133,56 @@ Proof. done. Qed.
 Let unf_eqs := (full_unf_end, full_unf_msg, full_unf_branch). 
 
 
-Let eqs := (utils.comap_eqs,g_to_cs_eqs, unf_eqs, utils.coeq). 
+Let eqs := (utils.comap_eqs,gtocoinds_eqs, unf_eqs, utils.coeq). 
 
-Inductive Unravelg_gen (R : gType -> gcType  -> Prop) : gType -> gcType  -> Prop :=
- | Unravelg_gen_msg g0 gc0 a u : R g0 gc0 -> Unravelg_gen R (GMsg a u g0) (GCMsg a u gc0)
- | Unravelg_gen_branch (gs : seq gType) (gcs : seq gcType) a : size gs = size gcs -> Forall (fun p => R p.1 p.2) (zip gs gcs) -> Unravelg_gen R (GBranch a gs) (GCBranch a gcs) (*restrict gcType to be an inductive list in disguse, only coerced from inductive to coinductive to let g_to_c pass productivity test of Coq*)
- | Unravelg_gen_rec g gc : Unravelg_gen R (g [g GRec g .: GVar]) gc  -> Unravelg_gen R (GRec g) gc (*guarded*)
- | Unravelg_gen_end : Unravelg_gen R GEnd GCEnd.
+Inductive gUnravel_gen (R : gType -> gcType  -> Prop) : gType -> gcType  -> Prop :=
+ | gUnravel_gen_msg g0 gc0 a u : R g0 gc0 -> gUnravel_gen R (GMsg a u g0) (GCMsg a u gc0)
+ | gUnravel_gen_branch (gs : seq gType) (gcs : seq gcType) a : size gs = size gcs -> Forall (fun p => R p.1 p.2) (zip gs gcs) -> gUnravel_gen R (GBranch a gs) (GCBranch a gcs) (*restrict gcType to be an inductive list in disguse, only coerced from inductive to coinductive to let gtocoind pass productivity test of Coq*)
+ | gUnravel_gen_rec g gc : gUnravel_gen R (g [g GRec g .: GVar]) gc  -> gUnravel_gen R (GRec g) gc (*guarded*)
+ | gUnravel_gen_end : gUnravel_gen R GEnd GCEnd.
 
-Lemma Unravelg_gen_mon : monotone2 Unravelg_gen.
+Lemma gUnravel_gen_mon : monotone2 gUnravel_gen.
 Proof. move => x0 x1. intros. induction IN;try done. con;eauto. 
 con;eauto. apply/List.Forall_forall. intros. 
 move/List.Forall_forall : H0. eauto. con. done. con. 
 Qed. 
 
-Notation Unravelg e0 e1 := (paco2 Unravelg_gen bot2 e0 e1). 
-Hint Resolve Unravelg_gen_mon : paco. 
+Notation gUnravel e0 e1 := (paco2 gUnravel_gen bot2 e0 e1). 
+Hint Resolve gUnravel_gen_mon : paco. 
 
-Variant Unravelg2_gen (R : gType -> gcType  -> Prop) : gType -> gcType  -> Prop :=
- | Unravelg2_gen_msg e0 ec d u :  R e0 ec -> Unravelg2_gen R  (GMsg d u e0) (GCMsg d u ec)
- | Unravelg2_gen_branch (es : seq gType) ( ecs : seq gcType)  d : size es = size ecs ->  Forall (R_pair R) (zip es ecs) -> Unravelg2_gen R (GBranch d es)  (GCBranch d ecs)
- | Unravelg2_gen_end :   Unravelg2_gen R GEnd  GCEnd.
+Variant gUnravel2_gen (R : gType -> gcType  -> Prop) : gType -> gcType  -> Prop :=
+ | gUnravel2_gen_msg e0 ec d u :  R e0 ec -> gUnravel2_gen R  (GMsg d u e0) (GCMsg d u ec)
+ | gUnravel2_gen_branch (es : seq gType) ( ecs : seq gcType)  d : size es = size ecs ->  Forall (R_pair R) (zip es ecs) -> gUnravel2_gen R (GBranch d es)  (GCBranch d ecs)
+ | gUnravel2_gen_end :   gUnravel2_gen R GEnd  GCEnd.
 
-Lemma Unravelg2_gen_mon : monotone2 Unravelg2_gen. 
+Lemma gUnravel2_gen_mon : monotone2 gUnravel2_gen. 
 Proof. move => x0 x1. intros. induction IN;try done. con;eauto. 
 con;eauto. apply/List.Forall_forall. intros. 
 move/List.Forall_forall : H0. eauto. con. 
 Qed. 
 
-Hint Resolve Unravelg2_gen_mon : paco. 
-Notation UnfUnravelg := (ApplyF full_unf ssrfun.id). 
-Notation Unravelg2 := (fun g gc =>  paco2 (UnfUnravelg \o Unravelg2_gen) bot2 g gc).
+Hint Resolve gUnravel2_gen_mon : paco. 
+Notation UnfgUnravel := (ApplyF full_unf ssrfun.id). 
+Notation gUnravel2 := (fun g gc =>  paco2 (UnfgUnravel \o gUnravel2_gen) bot2 g gc).
 
-Variant Rolling_gen (R : gType ->  Prop) : gType   -> Prop :=
- | rol_gen_msg e0  d u :  R e0 -> Rolling_gen R  (GMsg d u e0) 
- | rol_gen_branch (es : seq gType)  d :  Forall R es -> Rolling_gen R (GBranch d es) 
- | rol_gen_end :   Rolling_gen R GEnd .
+Variant gInvPred_gen (R : gType ->  Prop) : gType   -> Prop :=
+ | rol_gen_msg e0  d u :  R e0 -> gInvPred_gen R  (GMsg d u e0) 
+ | rol_gen_branch (es : seq gType)  d :  Forall R es -> gInvPred_gen R (GBranch d es) 
+ | rol_gen_end :   gInvPred_gen R GEnd .
 
-Lemma Rolling_gen_mon : monotone1 Rolling_gen. 
+Lemma gInvPred_gen_mon : monotone1 gInvPred_gen. 
 Proof. move => x0 x1. intros. induction IN;try done. con;eauto. 
 con;eauto. apply/List.Forall_forall. intros. eauto. 
 move/List.Forall_forall : H. eauto. con. 
 Qed. 
 
 
-Hint Resolve Rolling_gen_mon : paco. 
+Hint Resolve gInvPred_gen_mon : paco. 
 
 
-Notation Rolling := (paco1 (ApplyF1 full_unf \o Rolling_gen) bot1).
+Notation gInvPred := (paco1 (ApplyF1 full_unf \o gInvPred_gen) bot1).
 
-Lemma Unravel_Rolling : forall g gc, Unravelg2 g gc -> Rolling g. 
+Lemma Unravel_gInvPred : forall g gc, gUnravel2 g gc -> gInvPred g. 
 Proof. 
 pcofix CIH. intros. punfold H0. inv H0. pfold. con. 
 inv H;eauto;pclearbot. con. eauto. 
@@ -194,33 +194,33 @@ con.
 Qed.
 
 
-Lemma g_to_c_full_unf : forall g, g_to_c g = g_to_c (full_unf g). 
+Lemma gtocoind_full_unf : forall g, gtocoind g = gtocoind (full_unf g). 
 Proof. 
 intros. 
 rewrite !eqs full_unf_idemp //=. 
 Qed.
 
 
-Lemma Rolling_Unravel : forall g ,  Rolling g -> Unravelg2 g (g_to_c g).
+Lemma gInvPred_Unravel : forall g ,  gInvPred g -> gUnravel2 g (gtocoind g).
 Proof. 
 pcofix CIH. intros. punfold H0. inv H0. pfold.
-rewrite g_to_c_full_unf.  con. 
+rewrite gtocoind_full_unf.  con. 
 inv H;eauto;pclearbot;rewrite !eqs.  
-rewrite -g_to_c'_eq -g_to_c_eq. con. eauto. 
+rewrite -gtocoind'_eq -gtocoind_eq. con. eauto. 
 con. rewrite size_map //=. 
 clear H H1 H0. elim : es H2. simpl.  auto. 
 simpl. intros. inv H2. pclearbot. con. eauto. eauto. 
 con. 
 Qed.
 
-Lemma Rolling_iff : forall g ,  Rolling g <-> Unravelg2 g (g_to_c g).
+Lemma gInvPred_iff : forall g ,  gInvPred g <-> gUnravel2 g (gtocoind g).
 Proof. 
-intros. split. move/Rolling_Unravel=>//=. 
-move/Unravel_Rolling=>//=. 
+intros. split. move/gInvPred_Unravel=>//=. 
+move/Unravel_gInvPred=>//=. 
 Qed.
 
 
-Lemma Rolling_unf_iff : forall g, Rolling g <-> Rolling (full_unf g). 
+Lemma gInvPred_unf_iff : forall g, gInvPred g <-> gInvPred (full_unf g). 
 Proof. 
 intros. split. intros. punfold H. inv H. pfold. con. rewrite full_unf_idemp //=. 
 intros. pfold. con. punfold H. inv H. rewrite full_unf_idemp in H0. done. 
@@ -229,23 +229,23 @@ Qed.
 
 
 
-Lemma Unravelg_unf4 :  forall e ec (R: gType -> gcType -> Prop), paco2 Unravelg_gen R (unf e) ec -> paco2 Unravelg_gen R e ec.
+Lemma gUnravel_unf4 :  forall e ec (R: gType -> gcType -> Prop), paco2 gUnravel_gen R (unf e) ec -> paco2 gUnravel_gen R e ec.
 Proof.
 intros.  destruct e;try done. pfold. constructor. simpl in H. punfold H. 
 Qed.
 
-Lemma Unravelg_unf5 :  forall n e ec (R: gType -> gcType -> Prop), paco2 Unravelg_gen R (iter n unf e) ec -> paco2 Unravelg_gen R e ec.
+Lemma gUnravel_unf5 :  forall n e ec (R: gType -> gcType -> Prop), paco2 gUnravel_gen R (iter n unf e) ec -> paco2 gUnravel_gen R e ec.
 Proof.
-elim. done. intros. simpl in H0. apply Unravelg_unf4 in H0. auto. 
+elim. done. intros. simpl in H0. apply gUnravel_unf4 in H0. auto. 
 Qed.
 
-Lemma Unravelg_unf6 :  forall e ec (R: gType -> gcType -> Prop), paco2 Unravelg_gen R (full_unf e) ec -> paco2 Unravelg_gen R e ec.
+Lemma gUnravel_unf6 :  forall e ec (R: gType -> gcType -> Prop), paco2 gUnravel_gen R (full_unf e) ec -> paco2 gUnravel_gen R e ec.
 Proof. 
-intros. rewrite /full_unf in H. apply/Unravelg_unf5.  eauto. 
+intros. rewrite /full_unf in H. apply/gUnravel_unf5.  eauto. 
 Qed.
 
 
-Lemma Unravelg_iff : forall e ec, Unravelg e ec <->  Unravelg2 e ec. 
+Lemma gUnravel_iff : forall e ec, gUnravel e ec <->  gUnravel2 e ec. 
 Proof. intros. split. 
 move : e ec. pcofix CIH. 
 intros. punfold H0.  induction H0. pclearbot. pfold.
@@ -253,29 +253,29 @@ constructor. rewrite /full_unf /=.  constructor. eauto.
 pfold. constructor. rewrite /full_unf /=. constructor. done. 
 induction H0;auto. constructor. pclearbot. eauto. eauto.  
 pfold. constructor. rewrite full_unf_subst. 
-punfold IHUnravelg_gen. inv IHUnravelg_gen. done.
+punfold IHgUnravel_gen. inv IHgUnravel_gen. done.
 pfold. constructor. rewrite /full_unf. constructor.
 intros. 
 move : e ec H.  pcofix CIH. intros. punfold H0. inv H0. 
-inv H. apply/Unravelg_unf6. rewrite -H1. pfold. constructor. 
+inv H. apply/gUnravel_unf6. rewrite -H1. pfold. constructor. 
 right. apply/CIH. pclearbot. done. 
-apply/Unravelg_unf6. rewrite -H1. pfold. constructor. done. 
+apply/gUnravel_unf6. rewrite -H1. pfold. constructor. done. 
 induction H3;auto. pclearbot. eauto. 
-apply/Unravelg_unf6. rewrite -H2. pfold. constructor. 
+apply/gUnravel_unf6. rewrite -H2. pfold. constructor. 
 Qed.
 
-Lemma g_to_c_rec g : (g_to_c (GRec g)) = g_to_c (g [g GRec g .: GVar]). 
+Lemma gtocoind_rec g : (gtocoind (GRec g)) = gtocoind (g [g GRec g .: GVar]). 
 Proof. rewrite !eqs full_unf_subst //=. Qed.
 
-Lemma unravelg_exist : forall e,  Unravelg2 e (g_to_c e) <-> exists ec, Unravelg2 e  ec.
+Lemma unravelg_exist : forall e,  gUnravel2 e (gtocoind e) <-> exists ec, gUnravel2 e  ec.
 Proof. 
 intros. split. 
-intros. exists (g_to_c e).  done.
+intros. exists (gtocoind e).  done.
 case. move : e. 
 intros. 
 move : x e p. pcofix CIH. 
 move => x e Hu. punfold Hu. inv Hu. 
-pfold. con. rewrite g_to_c_full_unf.
+pfold. con. rewrite gtocoind_full_unf.
  inv H;rewrite 3!eqs;try con;eauto;pclearbot. eauto. rewrite size_map. done. 
 clear H Hu H0. 
 elim :es ecs H1 H2. case;try done.  ssa. move => a l IH [] //=.  ssa. 
@@ -334,7 +334,7 @@ rewrite flatten_cat. f_equal. auto. apply/H. auto.
 Qed.
 
 
-(*Intermediate judgment that gives us induction principle to show Rolling_no_fv*)
+(*Intermediate judgment that gives us induction principle to show gInvPred_no_fv*)
 Inductive has_var (n : nat ) :  gType -> Prop := 
  | hv0  : has_var n (GVar n)
  | hv1 a u g0 : has_var n g0 -> has_var n (GMsg a u g0)
@@ -364,11 +364,11 @@ Qed.
 (*Cool Trick, when going from coinductive to negation of some structurally recursive boolean,
  intermediate step is to show boolean implies inductive unfolding judgment,
  it's negation is introduced into the context and the proof can be by induction on that.
- The technique informally says from the coinductive Rolling judgment and a proof
+ The technique informally says from the coinductive gInvPred judgment and a proof
  that we will observe a variable in finite time, we can reach a contradiction,
  so there can be no free variables.
 *)
-Lemma Rolling_no_fv : forall g, Rolling g -> (forall n, n \notin gType_fv2 g).
+Lemma gInvPred_no_fv : forall g, gInvPred g -> (forall n, n \notin gType_fv2 g).
 Proof. 
 intros. apply/negP. move/has_varP=>HH. elim : HH H;intros. 
 punfold H. inv H. inv H0. punfold H1. inv H1. inv H2. pclearbot. eauto. 
@@ -378,223 +378,9 @@ pfold. con. done.
 Qed.
 
 (*Proposition 4 from the paper*)
-Lemma proposition_4 : forall g gc, Unravelg2 g gc -> gclosed g. 
-Proof. intros. rewrite /gclosed.  apply/Rolling_no_fv. apply/Unravel_Rolling. eauto.
+Lemma proposition_4 : forall g gc, gUnravel2 g gc -> gclosed g. 
+Proof. intros. rewrite /gclosed.  apply/gInvPred_no_fv. apply/Unravel_gInvPred. eauto.
 Qed. 
-
-
-
-
-
-
-(*Fixpoint gType_fv2 e :=
-  match e with
-  | GVar j => [:: j]
-  | GEnd => nil
-  | GMsg _ _ g0 => gType_fv2 g0
-  | GBranch _ gs => flatten (map gType_fv2 gs)
-  | GRec g0 => map predn (filter (fun n => n != 0) (gType_fv2 g0))
-  end.
-
-Definition gclosed g := forall n, n \notin gType_fv2 g.
-
-Lemma gType_fv2_ren : forall g sigma, (gType_fv2 g ⟨g sigma⟩) = map sigma (gType_fv2 g). 
-Proof. 
-elim;rewrite //=;intros. 
-rewrite -!map_comp. rewrite H.
-rewrite filter_map /=. clear H. asimpl. 
-elim : (gType_fv2 g). done. ssa. 
-destruct (eqVneq a 0). subst. simpl. ssa. 
-simpl. destruct a. done. simpl. f_equal. done. 
-rewrite -!map_comp. rewrite map_flatten. rewrite -!map_comp. 
-f_equal. apply/eq_in_map=> x xIn. simpl. auto. 
-Qed.
-
-Lemma gType_fv2_subst : forall g sigma, (gType_fv2 g [g sigma]) = flatten (map (sigma >> gType_fv2) (gType_fv2 g)). 
-Proof. 
-elim;rewrite //=;intros. 
-rewrite cats0. asimpl. done. 
-rewrite H. rewrite -!map_comp. 
-asimpl. rewrite filter_flatten.
-rewrite -!map_comp. rewrite !map_flatten.
-rewrite -map_comp.
-rewrite /comp. asimpl. clear H.
-elim : ( gType_fv2 g);try done. ssa. 
-destruct (eqVneq a 0). simpl. subst. simpl. done. 
-simpl. destruct a. done. simpl.
-f_equal. asimpl. rewrite gType_fv2_ren. 
-rewrite filter_map /=. rewrite -map_comp.
-clear i.  clear H. 
-elim : ( gType_fv2 (sigma a));try done. ssa. 
-f_equal. done. done.  
-
-rewrite -map_comp. 
-rewrite !map_flatten.  rewrite -!map_comp. 
-rewrite /comp. asimpl. 
-elim : l H. done. ssa. simpl.
-rewrite flatten_cat. f_equal. auto. apply/H. auto. 
-Qed.
-
-
-(*Intermediate judgment that gives us induction principle to show Rolling_no_fv*)
-Inductive has_var (n : nat ) :  gType -> Prop := 
- | hv0  : has_var n (GVar n)
- | hv1 a u g0 : has_var n g0 -> has_var n (GMsg a u g0)
- | hv2 g gs a : In g gs -> has_var n g  -> has_var n (GBranch a gs)
- | hv3 g : has_var n (g [g GRec g .: GVar]) ->  has_var n (GRec g).
-Hint Constructors has_var. 
-
-
-
-Lemma has_var_subst : forall g n n' sigma, has_var n g -> has_var n' (sigma n)  ->  has_var n' g [g sigma]. 
-Proof. 
-move => g n n' sigma  H. elim : H n' sigma;rewrite //=;intros. 
-con. apply/H0. done. simpl. econstructor. apply/inP. apply/mapP. exists g0. apply/inP. done. eauto. 
-apply/H1. done. con. asimpl. move/H0 : H1. asimpl. done. 
-Qed. 
-
-
-
-Lemma has_varP : forall g n, n \in gType_fv2 g -> has_var n g. 
-Proof. 
-elim=>//=;intros;auto. rewrite inE in H. rewrite (eqP H). done. 
-con. move : H0. move/mapP=>[]. intros. subst. rewrite mem_filter in p. ssa. 
-destruct x;try done. simpl. 
-move/H : H1. intros. apply/has_var_subst. eauto. simpl. con. 
-move/flattenP : H0=>[] x. move/mapP=>[]. intros. subst. econstructor. 
-apply/inP. eauto. eauto. 
-Qed.*)
-
-(*Cool Trick, when going from coinductive to negation of some structurally recursive boolean,
- intermediate step is to show boolean implies inductive unfolding judgment,
- it's negation is introduced into the context and the proof can be by induction on that.
- The technique informally says from the coinductive Rolling judgment and a proof
- that we will observe a variable in finite time, we can reach a contradiction,
- so there can be no free variables.
-*)
-
-(*Lemma Rolling_no_fv : forall g, Rolling g -> (forall n, n \notin gType_fv2 g).
-Proof. 
-intros. apply/negP. move/has_varP=>HH. elim : HH H;intros. 
-punfold H. inv H. inv H0. punfold H1. inv H1. inv H2. pclearbot. eauto. 
-punfold H2.  inv H2.  inv H3. move/ForallP : H5. move/(_ _ H). case=>//=. 
-apply/H0. pfold. con.  punfold H1.  inv H1. rewrite full_unf_subst in H2. done. 
-Qed .
-
-Fixpoint non_cont g :=
-match g with 
-| GEnd => false
-| GVar _ => false 
-| GMsg a u g' => non_cont g'
-| GBranch a gs => has non_cont gs
-| GRec g' => (~~ guarded 0 g') || (non_cont g')
-end. 
-
-Lemma contractive_neg : forall g, contractive2 g -> ~~ (non_cont g).
-Proof. 
-elim;rewrite //=;intros. rewrite negb_or negb_involutive. ssa. 
-apply/hasPn=> x xIn. apply/H=>//=. apply (allP H0 _ xIn). 
-Qed. 
-
-Lemma contractive_neg2 : forall g,~~ (non_cont g) -> contractive2 g.
-Proof. 
-elim;rewrite //=;intros. rewrite negb_or negb_involutive in H0. ssa. 
-apply/allP. move => x xIn. apply/H. done. move/hasPn : H0. move/(_ _ xIn)=>//=. 
-Qed. 
-
-Lemma cont_eq : forall g, contractive2 g = ~~ (non_cont g). 
-Proof. intros. apply/eq_iff;split. apply/contractive_neg. apply/contractive_neg2. 
-Qed .
-
-
-Lemma gType_fv2_unf : forall g n, (n \in gType_fv2 g) = (n \in gType_fv2 (unf g)).  
-Proof. 
-case=>//=. intros. rewrite gType_fv2_subst. 
-apply/eq_iff. split. move/mapP=>[] x /=. rewrite mem_filter. ssa. subst. 
-apply/flattenP. destruct x;try done. simpl. 
-have : ((GRec g .: GVar) >> gType_fv2) = 
-([seq i.-1 | i <- gType_fv2 g & i != 0] .: fun n => [::n]).
-asimpl. simpl. f_equal. move=>->.
-exists ([::x]). 
-apply/mapP. exists x.+1. ssa. simpl. done. done. 
-move/flattenP=>[] x. move/mapP=>[] x0. intros. subst. destruct x0;try done.  
-move : q0. asimpl. simpl. rewrite inE. move/eqP. intros. subst. apply/mapP. exists x0.+1=>//=. 
-rewrite mem_filter. ssa. 
-Qed.
-
-Lemma gType_fv2_full_unf : forall g n, (n \in gType_fv2 g) = (n \in gType_fv2 (full_unf g)).  
-Proof. 
-intros. rewrite /full_unf. remember (mu_height g). clear Heqn0. elim : n0 g. done. 
-intros. rewrite iterS. rewrite H. apply/gType_fv2_unf. 
-Qed.
-
-
-Lemma guarded_sig2_ren : forall g sigma sigma' i, guarded i g ⟨g sigma⟩ -> (forall n, (sigma n) != i ->  (sigma' n) != i) -> guarded i g ⟨g sigma'⟩.
-Proof.
-elim;rewrite /=;intros;try done.
-apply H0. done.
-asimpl. apply : H. eauto. move => n.  asimpl. simpl. intros. destruct n. done. simpl in *. 
-move : H. rewrite /funcomp. intros. suff :  sigma' n != i.  lia. apply : H1. lia. 
-Qed.
-
-
-Lemma contractive2_ren2 : forall g sigma, contractive2 g ⟨g sigma⟩ -> contractive2 g. 
-Proof. 
-elim;intros;ssa. eapply (@guarded_sig2_ren _ _ id) in H1. move : H1. asimpl. done.
-asimpl.  rewrite /id. intros. apply/eqP.  move => HH. subst. simpl in H0. done. eauto. 
-eauto. apply/allP=> x xIn.  rewrite all_map in H0.  eapply H.  eauto.  apply (allP H0).  done. 
-Qed.
-
-Lemma contractive2_subst3 : forall g sigma n, contractive2 g [g sigma] -> n \in gType_fv2 g -> contractive2 (sigma n).
-Proof. 
-elim;rewrite /=;intros;try done. rewrite inE in H0. rewrite (eqP H0). done. 
-move/mapP : H1. case. intros. subst. rewrite mem_filter in p. ssa. destruct x. ssa. ssa.
-eapply H in H4.  2: eauto. simpl in H4. move : H4. asimpl.
-move/contractive2_ren2.  done. eauto.
-move/flattenP : H1.   case.  intros. move/mapP : p.   case.  intros. subst. 
-apply/H.  eauto. rewrite all_map in H0. apply (allP H0).  done. done.  
-Qed. 
-
-
-
-
-Lemma contractive_unf2 : forall g , contractive2 (unf g) -> contractive2 g. 
-Proof.
-intros. rewrite /unf. destruct g;try done. ssa. 
-destruct (guarded 0 g) eqn:Heqn. done. 
-eapply (@contractive2_subst3 _ _ 0) in H. ssa. rewrite Heqn in H0.  done.
-rewrite gType_fv2_full_unf. 
-
-apply eguarded_unfv in Heqn as Heqn'. rewrite Heqn' /= !inE //=.
-apply econtractive2_subst2 in H.  done. 
-Qed. 
-
-Lemma econtractive_full_unf2 : forall g , econtractive2 (full_eunf g) -> econtractive2 g. 
-Proof. intros. rewrite /full_eunf in H. remember (emu_height g). clear Heqn. 
-elim : n g H. done. ssa. apply/econtractive_unf2. apply/H.  rewrite -iterSr /=. done. 
-Qed.
-
-Lemma econtractive_full_unf2_eq : forall g , econtractive2 g = econtractive2 (full_eunf g). 
-Proof. intros. apply/eq_iff. split. apply/econtractive_full_eunf.
-apply/econtractive_full_unf2. 
-Qed. 
-
-
-*)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 Fixpoint enumg e :=
 e::
@@ -853,9 +639,9 @@ match full_unf g with
 | GRec _ | GVar _ => false | _ =>  all id l end. 
 
 
-(*We need g_to_c because exist statement for coinductive type doesn't give os coinduction hypothesis*)
-Lemma next_rec_sound_aux : forall e l   (R : gType -> gcType -> Prop) , next_rec  l has_treeP (fun _ => true) e ->  (forall x, x \in l -> R x (g_to_c x)) ->
-upaco2 (ApplyF full_unf ssrfun.id  \o Unravelg2_gen) R e (g_to_c e). 
+(*We need gtocoind because exist statement for coinductive type doesn't give us coinduction hypothesis*)
+Lemma next_rec_sound_aux : forall e l   (R : gType -> gcType -> Prop) , next_rec  l has_treeP (fun _ => true) e ->  (forall x, x \in l -> R x (gtocoind x)) ->
+upaco2 (ApplyF full_unf ssrfun.id  \o gUnravel2_gen) R e (gtocoind e). 
 Proof.
 intros. 
 funelim (next_rec  l has_treeP (fun _ => true) e). 
@@ -873,7 +659,7 @@ auto.
 
 con. rewrite size_map //=. 
 have : forall e0 : gType,
-      In e0 l ->  upaco2 (ApplyF full_unf ssrfun.id \o Unravelg2_gen) R e0 (g_to_c e0). 
+      In e0 l ->  upaco2 (ApplyF full_unf ssrfun.id \o gUnravel2_gen) R e0 (gtocoind e0). 
 intros. apply H. rewrite /nextg_unf Heqn. simpl. auto. 
 ssa. rewrite foldInMapP in H0.  apply (allP H0). rewrite /nextg_unf Heqn /=. 
 apply/map_f. apply/inP.  done. 
@@ -886,9 +672,9 @@ simpl. ssa. con. simpl. eauto. auto.
 Qed.
 
 Lemma next_rec_sound : forall e, next_rec nil has_treeP (fun _ => true) e ->
-Unravelg2 e (g_to_c e). 
+gUnravel2 e (gtocoind e). 
 Proof. 
-intros. suff : upaco2 (ApplyF full_unf ssrfun.id  \o Unravelg2_gen) bot2 e (g_to_c e). case.  done. done. 
+intros. suff : upaco2 (ApplyF full_unf ssrfun.id  \o gUnravel2_gen) bot2 e (gtocoind e). case.  done. done. 
 apply/next_rec_sound_aux. eauto. pclearbot. done. 
 Qed.
 
@@ -897,7 +683,7 @@ Qed.
 
 
 
-Lemma next_rec_complete_aux: forall e ec l, Unravelg2 e ec -> next_rec l has_treeP (fun _ => true) e.  
+Lemma next_rec_complete_aux: forall e ec l, gUnravel2 e ec -> next_rec l has_treeP (fun _ => true) e.  
 Proof. 
 intros. funelim (next_rec l  has_treeP (fun _ => true) e). 
 done. 
@@ -916,8 +702,8 @@ eapply index_ForallIC in H4. pclearbot. apply /H4. eauto.
 Unshelve. repeat constructor. 
 Qed. 
 
-Lemma next_recP : forall e, next_rec nil has_treeP (fun _ => true) e <->  Unravelg e (g_to_c e). 
-Proof. intros.  split;intros. apply/Unravelg_iff. apply/next_rec_sound. done. 
-erewrite Unravelg_iff in H. 
+Lemma next_recP : forall e, next_rec nil has_treeP (fun _ => true) e <->  gUnravel e (gtocoind e). 
+Proof. intros.  split;intros. apply/gUnravel_iff. apply/next_rec_sound. done. 
+erewrite gUnravel_iff in H. 
 apply/next_rec_complete_aux. eauto. 
 Qed.

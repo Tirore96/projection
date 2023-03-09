@@ -81,13 +81,6 @@ apply/H1. done. destruct (comp_dir p a) eqn:Heqn.
 apply/H1. rewrite Heqn. done. apply/H2. apply/none_not. done. 
 intros. apply/H3. done. intros. apply/IH. apply/H3. done. Qed.
 
-(*Using (forall x , In x .... generates a stronger induction principle*)
-
-
-
-
-
-
 Variant FinSeq_gen (R : gcType ->  Prop) : gcType   -> Prop :=
  | fin_seq_msg e0  d u :  R e0 -> FinSeq_gen R  (GCMsg d u e0) 
  | fin_seq_branch (es : seq gcType)  d :  Forall R es -> FinSeq_gen R (GCBranch d es) 
@@ -129,12 +122,12 @@ Proof.
 intros. punfold H. inv H. exists es. done. 
 Qed.
 
-Inductive cproject_gen (p : ptcp) (R : gcType ->  ecType -> Prop) : gcType -> ecType -> Prop :=
+Inductive cproject_gen (p : ptcp) (R : gcType ->  lcType -> Prop) : gcType -> lcType -> Prop :=
  | cproject_msg_s g0 a e0 u d : comp_dir p a = Some d ->
                                   R g0 e0 -> cproject_gen p R (GCMsg a u g0) (ECMsg d (action_ch a) u e0)
  | cproject_msg_n g0 a e0 u : comp_dir p a = None ->
                                  R g0 e0 -> part_of_all p g0 ->  cproject_gen p R (GCMsg a u g0) e0(*assumption has to build something*)
- | cproject_gen_branch_f (gs : seq gcType) (es : seq ecType) a d :  comp_dir p a = Some d -> size gs = size es ->
+ | cproject_gen_branch_f (gs : seq gcType) (es : seq lcType) a d :  comp_dir p a = Some d -> size gs = size es ->
                                         (forall p, In p (zip gs es) ->  R p.1 p.2 ) -> cproject_gen p R (GCBranch a gs) (ECBranch d (action_ch a) es)
  | cproject_gen_branch_o g (gs : seq gcType)  a e : comp_dir p a = None -> In g gs ->  (*We need list to be non -empty otherweise it projects to anything*)
                                     (forall g', In g' gs ->  part_of_all p g' /\  R g' e) ->  cproject_gen p R (GCBranch a gs) e

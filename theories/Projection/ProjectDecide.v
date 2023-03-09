@@ -8,13 +8,8 @@ Unset Printing Implicit Defensive.
 
 Let eqs := intermediateProj.eqs. 
 
-
-
 Require Import Program. 
 From Equations Require Import Equations. 
-
-
-(*Definition full_geunf ge := (full_unf ge.1,full_eunf ge.2). *)
 
 Definition has_tree g := next_rec nil has_treeP (fun _ => true) g.
 
@@ -363,7 +358,7 @@ match e with
 end. 
 
 
-Definition project_predP (p : ptcp) (ge : gType * endpoint) (bs : seq bool) : bool := 
+Definition project_predP (p : ptcp) (ge : gType * lType) (bs : seq bool) : bool := 
   let ge' := full_geunf ge in 
  if (inp_all p ge.1) && (inp p ge.1) then if g_top_act p ge'.1 is Some l then (Some l == e_top_act ge'.2) && (all id bs) else (size_pred ge'.1) && (all id bs)
   else (has_tree ge.1) && (~~ inp p ge.1) &&  (full_eunf ge'.2 == EEnd).
@@ -378,21 +373,21 @@ have : s1 \in nextg_unf g.
 rewrite /nextge in H. 
 rewrite /full_geunf /= in H. rewrite /nextg_unf. 
 destruct (full_unf g);try done. 
-move : H. case_if. destruct (full_eunf e);try done. 
+move : H. case_if. destruct (full_eunf l);try done. 
 rewrite inE. move/eqP. case. intros. subst. simpl. auto. 
 rewrite inE. move/eqP. case. intros. subst. simpl. auto. 
-move : H. case_if. destruct (full_eunf e);try done.  
+move : H. case_if. destruct (full_eunf l);try done.  
 move/mem_zip. ssa.  move/mapP=>[]. 
 intros. inv q. simpl. done. 
 intros. 
-have : s2 \in (full_eunf e)::(nexte_unf e).
+have : s2 \in (full_eunf l)::(nexte_unf l).
 rewrite /nextge in H. 
 rewrite /full_geunf /= in H. rewrite /nexte_unf. 
 destruct (full_unf g);try done. 
-move : H. case_if. destruct (full_eunf e);try done. 
+move : H. case_if. destruct (full_eunf l);try done. 
 rewrite inE. move/eqP. case. intros. subst. simpl. auto. 
 rewrite inE. move/eqP. case. intros. subst. simpl. auto. 
-move : H. case_if. destruct (full_eunf e);try done.  
+move : H. case_if. destruct (full_eunf l);try done.  
 move/mem_zip. ssa.  lia. 
 move/mapP=>[]. 
 intros. inv q. auto.  
@@ -412,34 +407,33 @@ apply/coGlobal.selfe.  apply/selfe.
 Qed. 
 
 
-Definition gemeasure (ge : gType * endpoint) (visited : seq ( gType * endpoint)) := 
+Definition gemeasure (ge : gType * lType) (visited : seq ( gType * lType)) := 
 size (rep_rem visited (undup (enumge ge))). 
 Check nextge_unf. 
-Equations pair_next_rec (A : Set ) (p : ptcp) (visited : seq  (gType * endpoint))  (P : gType * endpoint -> seq A ->  A) 
+Equations pair_next_rec (A : Set ) (p : ptcp) (visited : seq  (gType * lType))  (P : gType * lType -> seq A ->  A) 
     (b : A)  
-    (ge : gType * endpoint): A by wf (gemeasure ge visited) := 
+    (ge : gType * lType): A by wf (gemeasure ge visited) := 
  pair_next_rec p  visited P b ge  with (dec (ge \in visited)) => {
   pair_next_rec _  _ _ _ _ (in_left) := b;
-(*  next_rec visited e _ :=  (~~ is_gvar (full_unf e)) && (~~ is_grec (full_unf e)) &&   (foldInAll (nextg_unf e) (fun e0 _ => next_rec (e::visited) e0))*)
   pair_next_rec p visited  P b ge _ :=  (P ge (foldInMap (nextge_unf p ge) (fun e0 _ => pair_next_rec p (ge::visited) P b e0)))
 
  }. 
 Next Obligation. 
 apply/ltP. 
 simpl. rewrite /gemeasure /=.
-destruct ((g0,e0) \in ((enumge (g,e)))) eqn:Heqn.
+destruct ((g0,l0) \in ((enumge (g,l)))) eqn:Heqn.
 apply/size_strict_sub. 
 apply/rem_uniq/rep_rem_uniq/undup_uniq. 
-intros. destruct (eqVneq x (g0,e0)).  subst. rewrite -mem_rep_iff.  rewrite mem_undup. 
+intros. destruct (eqVneq x (g0,l0)).  subst. rewrite -mem_rep_iff.  rewrite mem_undup. 
 apply/selfge. rewrite e1 //=.
 apply mem_rem2 in H;eauto. 
 destruct (x \in visited) eqn:Heqn2.
-eapply rep_rem_uniq2 in Heqn2. 2 : { apply/undup_uniq. apply (enumge (g,e)). Locate inP. } 
+eapply rep_rem_uniq2 in Heqn2. 2 : { apply/undup_uniq. apply (enumge (g,l)). } 
 rewrite H in Heqn2. done. 
 move : H.  
 rewrite -!mem_rep_iff. rewrite  !mem_undup. intros. apply/enumge_subst_nextg_unf.  apply/inP. eauto. 
 done. rewrite Heqn2. done. rewrite Heqn2. done. 
-instantiate (1 := (g0,e0)).  apply/negP=>HH. rewrite mem_rem_uniqF in HH. done. 
+instantiate (1 := (g0,l0)).  apply/negP=>HH. rewrite mem_rem_uniqF in HH. done. 
 apply/rep_rem_uniq/undup_uniq. 
 rewrite -mem_rep_iff.  rewrite mem_undup. apply/enumge_subst_nextg_unf. apply/inP. eauto. done. 
 rewrite e1 //=. 
@@ -452,7 +446,7 @@ intros. 2 : {  apply/negP=>HH. move : Heqn. move/negP=>HH2. apply/HH2.
 rewrite -mem_undup. 
 rewrite mem_rep_iff.  eauto.  rewrite e1 //=. } 
 destruct (x \in visited) eqn:Heqn2.
-eapply rep_rem_uniq2 in Heqn2. 2 : { apply/undup_uniq. apply (enumge (g,e)). } 
+eapply rep_rem_uniq2 in Heqn2. 2 : { apply/undup_uniq. apply (enumge (g,l)). } 
 rewrite H in Heqn2. done. 
 move : H.  
 rewrite -!mem_rep_iff. rewrite  !mem_undup. intros. apply/enumge_subst_nextg_unf.  apply/inP. eauto. 
@@ -465,7 +459,7 @@ Defined.
 
 
 Print Project. 
-Lemma projectb_sound_aux : forall g e l p  (R : gType -> endpoint -> Prop) , Rolling g -> pair_next_rec p l (project_predP p) true (g,e) ->  (forall g0 e0, (g0,e0) \in l -> R g0 e0) ->
+Lemma projectb_sound_aux : forall g e l p  (R : gType -> lType -> Prop) , gInvPred g -> pair_next_rec p l (project_predP p) true (g,e) ->  (forall g0 e0, (g0,e0) \in l -> R g0 e0) ->
 upaco2 (UnfProj \o  project_gen p) R g e. 
 Proof.
 intros. 
@@ -531,7 +525,7 @@ simpl.  auto. repeat constructor.
 inv H3. move : H8. 
 destruct p0. simpl. 
 move/List.Forall_forall=>HH. 
-suff : upaco1 (ApplyF1 full_unf \o Rolling_gen) bot1 g0. 
+suff : upaco1 (ApplyF1 full_unf \o gInvPred_gen) bot1 g0. 
 intros. pclearbot. done. 
 apply/HH. move : H0. move/inP. move/mem_zip. ssa. 
 apply/inP. done. 
@@ -557,7 +551,7 @@ intros. subst. auto. auto. con.
 
 ssa.  apply/Project_eunf. rewrite full_eunf_idemp in H4. rewrite (eqP H4). 
 pfold. con. con. rewrite -part_of2_iff. rewrite -inp_iff. apply/negP=>//=. 
-apply/Unravel_Rolling. rewrite -Unravelg2_iff. apply/next_rec_sound. done. 
+apply/Unravel_gInvPred. rewrite -gUnravel2_iff. apply/next_rec_sound. done. 
 Qed.
 
 Lemma Project_not_part2_aux : forall p g e, Project g p e -> ~ part_of2 p g -> EQ2 e  EEnd. 
@@ -634,13 +628,34 @@ rewrite andbC /=. rewrite full_eunf_idemp H1 eqxx.    ssa.
 apply/next_rec_complete_aux. apply/Project_gtree. eauto. 
 Qed.
 
+Lemma has_tree_unf : forall g, has_tree (full_unf g) -> has_tree g. 
+Proof. 
+intros. apply/next_rec_complete_aux. apply next_rec_sound in H. pfold. con. punfold H. inv H. 
+rewrite full_unf_idemp in H0. eauto.
+Qed. 
+
+(*Lemma pair_imp_has_tree  : forall g e p l, (forall ge, ge \in l -> has_tree ge.1) ->  pair_next_rec p l (project_predP p) true (g,e) -> has_tree g. 
+Proof. 
+intros. funelim ( pair_next_rec p l (project_predP p) true (g, e)).
+have : (g,e0) \in visited. rewrite e //=. move/H. ssa. 
+rewrite -Heqcall in H1. ssa.
+move : H1. rewrite /project_predP /=. rewrite !foldInMapP.  case_if. ssa. 
+apply/has_tree_unf. destruct (full_unf g)eqn:Heqn. ssa.
+rewrite inp_full_unf in H4. rewrite Heqn in H4. done. 
+rewrite inp_full_unf in H4. rewrite Heqn in H4. done. 
+apply inp_iff in H4.  
+rewrite /nextge_unf /full_geunf /= Heqn /= in H2. ssa. 
+
+lia.
+have : has_tree (g,e).1. apply H.
+apply H in e. *)
 
 Definition projectb g p e := (has_tree g) && (pair_next_rec p nil (project_predP p) true (g,e)).
 
 Lemma projectb_iff : forall g p e, projectb g p e <-> Project g p e. 
 Proof. 
 intros;split. move/andP=>[]. ssa. move/projectb_sound_aux : b.
-move/next_rec_sound : a. move/Unravelg2_Rol. intros.  edestruct b; eauto. 
+move/next_rec_sound : a. move/gUnravel2_Rol. intros.  edestruct b; eauto. 
 done. done. rewrite /projectb. ssa. apply/next_rec_complete_aux. apply/Project_gtree. eauto. 
 apply/projectb_complete_aux. eauto. 
 Qed.
