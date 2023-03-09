@@ -1,12 +1,12 @@
 From mathcomp Require Import all_ssreflect zify.
-From Proj Require Import Utils Syntax Elimination GlobalTree EndpointTree ProjectSpec ProjectDecide.
+From Projection Require Import ProjectDecide.
 Require Import Paco.paco.
 
 Set Implicit Arguments.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
-Let eqs := ProjectSpec.eqs. 
+Let eqs := IntermediateProj.eqs. 
 
 
 Fixpoint trans p g := 
@@ -224,7 +224,7 @@ apply/EQ2_eunf. rewrite proj_eq_full H2 /= H8.
 apply/EQ2_eunf2. apply/H1.   apply/Project_eunf. eauto. 
 apply EQ2_eunfl. rewrite -H5. clear H5. 
 apply/paco2_mon. apply/EQ_end. rewrite part_of2_iff H2 //=. 
-rewrite Rolling_iff H2 //=. done. 
+rewrite Rolling_unf_iff H2 //=. done. 
 
 punfold H1. inv H1. rewrite H0 in H2. inv H2;pc;try comp_disc. 
 pfold. con. rewrite -H5. rewrite proj_eq_full. rewrite H0 /= H6. cbn. con. rewrite size_map //=. 
@@ -233,7 +233,7 @@ elim : gs es H7. case=>//=.
 move => a0 l IH. case=>//=. move => a1 l0 [] Heq. intros. inv H8. pclearbot. simpl in *. con;eauto. 
 apply/EQ2_eunfl. rewrite -H3. apply/paco2_mon. apply/EQ_end. 
 rewrite part_of2_iff.  rewrite H0 //=. 
-rewrite Rolling_iff H0 //=. done. 
+rewrite Rolling_unf_iff H0 //=. done. 
 punfold H3. inv H3. rewrite H2 in H4. inv H4; try comp_disc;pc. 
 apply/EQ2_eunf. rewrite proj_eq_full H2 /=.  rewrite H7. 
 destruct gs;try done. simpl. apply/EQ2_eunf2.  apply/H1. simpl. left. done. 
@@ -242,7 +242,7 @@ have : In g1 (g1 :: gs). simpl. auto.
 move/H10. ssa. pclearbot. apply/Project_eunf. done. 
 apply/EQ2_eunfl. rewrite -H5. apply/paco2_mon. apply/EQ_end.
 rewrite part_of2_iff.  rewrite H2 //=. 
-rewrite Rolling_iff H2 //=. done. Search _ (Project _ _ EEnd). 
+rewrite Rolling_unf_iff H2 //=. done. Search _ (Project _ _ EEnd). 
 apply Project_eunf2 in H0. rewrite H in H0. apply Project_not_part in H0 as H0'. 
 apply/EQ2_eunfl. rewrite H. 
 apply/paco2_mon. apply/EQ_end. done. apply/Unravelg2_Rol. apply/Project_gtree.   eauto. 
@@ -418,7 +418,7 @@ elim/part_of_all2_ind2 : HH gc ec H1 H0;intros.
   move=>->. apply/paco2_mon. apply/EQ2_EQ. apply/project_project. pfold. con. con.
   rewrite -part_of2_iff. 
   rewrite ICpart_of_iff. eauto. eauto. 
-  rewrite -Rolling_iff. 
+  rewrite -Rolling_unf_iff. 
   apply/Unravel_Rolling.  eauto. done.
 Qed.
 

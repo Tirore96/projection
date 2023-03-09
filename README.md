@@ -1,7 +1,10 @@
 This repository is the Coq mechanisation that accompanies the paper "Sound and Complete Projection of Multi Party Session Types". 
-We now describe the conceptual mapping from the paper to the code 
+The mapping between the paper to the code is:
 
-Section 2 (Global Types, Local Types, and Standard Projection):
+Section 2 (Global Types, Local Types, and Standard Projection) -> IndTypes/
+Section 3 (Projection on Coinductive Types) -> IndTypes/
+
+
 Global and Local type syntax: theories/Syntax.v
 
 

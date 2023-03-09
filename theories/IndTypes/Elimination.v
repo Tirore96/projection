@@ -1,9 +1,9 @@
 From mathcomp Require Import all_ssreflect zify.
-From Proj Require Export Utils Syntax. 
+Require Export Proj.Utils.
+From IndTypes Require Export Syntax. 
 Set Implicit Arguments.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
-
 
 (*It is hard to give a mutually inductive nested induction principle*)
 (*
@@ -336,7 +336,7 @@ End SpecializeElimination2.
 
 
 
-Lemma inP : forall {A : eqType} l (g : A) , reflect (List.In g l) (g \in l).
+Lemma inP : forall {A : eqType} l (g : A) , reflect (In g l) (g \in l).
 Proof.
 move => A. elim.
 rewrite /=. intros. rewrite in_nil. constructor. done.

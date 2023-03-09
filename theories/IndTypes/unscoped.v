@@ -3,7 +3,7 @@
 Version: December 11, 2019.
  *)
 
-Require Export Proj.axioms.
+Require Export IndTypes.axioms.
 
 (*Section Enclose.*)
 

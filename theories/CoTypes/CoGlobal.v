@@ -1,7 +1,7 @@
 
 From mathcomp Require Import all_ssreflect zify.
 
-From Proj Require Import Syntax Elimination Utils.
+From IndTypes Require Export Elimination.
 Require Import Paco.paco.
 
 Set Implicit Arguments.
@@ -217,6 +217,13 @@ Lemma Rolling_iff : forall g ,  Rolling g <-> Unravelg2 g (g_to_c g).
 Proof. 
 intros. split. move/Rolling_Unravel=>//=. 
 move/Unravel_Rolling=>//=. 
+Qed.
+
+
+Lemma Rolling_unf_iff : forall g, Rolling g <-> Rolling (full_unf g). 
+Proof. 
+intros. split. intros. punfold H. inv H. pfold. con. rewrite full_unf_idemp //=. 
+intros. pfold. con. punfold H. inv H. rewrite full_unf_idemp in H0. done. 
 Qed.
 
 

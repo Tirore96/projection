@@ -1,3 +1,6 @@
 -Q theories Proj
+-Q theories/IndTypes IndTypes
+-Q theories/CoTypes CoTypes
+-Q theories/Projection Projection
 -arg -w
 -arg none

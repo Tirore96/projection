@@ -1,4 +1,4 @@
-Require Export Proj.unscoped.
+Require Export IndTypes.unscoped.
 From mathcomp Require Import all_ssreflect zify.
 From deriving Require Import deriving. 
 

@@ -1,12 +1,12 @@
 From mathcomp Require Import all_ssreflect zify finmap.
-From Proj Require Import Utils Syntax Elimination GlobalTree EndpointTree ProjectSpec.
+From Projection Require Export IntermediateProj.
 Require Import Paco.paco.
 
 Set Implicit Arguments.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
-Let eqs := ProjectSpec.eqs. 
+Let eqs := IntermediateProj.eqs. 
 
 
 
@@ -16,7 +16,7 @@ From Equations Require Import Equations.
 
 (*Definition full_geunf ge := (full_unf ge.1,full_eunf ge.2). *)
 
-Definition has_tree g := next_rec nil GlobalTree.has_treeP (fun _ => true) g.
+Definition has_tree g := next_rec nil has_treeP (fun _ => true) g.
 
 Fixpoint inp p g := 
   match g with
@@ -408,7 +408,7 @@ Qed.
 
 Lemma selfge : forall e, e \in enumge e. 
 Proof. intros. rewrite /enumge. destruct e. apply/mem_compose=>//=.  
-apply/GlobalTree.selfe.  apply/selfe. 
+apply/CoGlobal.selfe.  apply/selfe. 
 Qed. 
 
 

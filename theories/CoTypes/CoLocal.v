@@ -1,6 +1,6 @@
 From mathcomp Require Import all_ssreflect zify.
 
-From Proj Require Import Syntax Elimination Utils.
+From IndTypes Require Export Elimination.
 Require Import Paco.paco.
 
 Check upaco2. 
