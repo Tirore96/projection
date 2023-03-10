@@ -23,7 +23,7 @@ Section 3 (Projection on Coinductive Types) -> CoTypes/\
 Section 4 (Projection on Inductive Types: Soundness and Completeness) -> Projection/IndProj.v\
 Section 5 (Deciding Projectability) -> Projection/Intermediateproj.v, Projection/ProjectDecide.v
 
-# Locations of definitions, lemmas, corrolaries and theorems\
+# Locations of definitions, lemmas, corrolaries and theorems
 Definition 1 ---> IndTypes/syntax.v (gType,lType)\
 Definition 2 ---> coTypes/coGlobal.v (gcType), coTypes/coLocal.v (lcType)\
 Definition 3 ---> coTypes/coGlobal.v (gUnravel), coTypes/coLocal.v (lUnravel)\
