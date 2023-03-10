@@ -19,18 +19,36 @@ match g with
 | GEnd => EEnd 
 end. 
 
-Definition project (g : gType) (p : ptcp) : option lType := 
+Definition proj (g : gType) (p : ptcp) : option lType := 
 let e := trans p g in if projectb g p e then Some e else None. 
 
-Lemma project_sound_aux : forall g p e, project g p = Some e -> Project g p e. 
+Lemma proj_sound_aux : forall g p e, proj g p = Some e -> Project g p e. 
 Proof. 
-intros. rewrite /project in H. move : H. case_if. case. 
+intros. rewrite /proj in H. move : H. case_if. case. 
 move=><-.  apply/projectb_iff. done. done.
 Qed.
 
-Lemma project_sound : forall g p e, project g p = Some e -> exists gc ec, gUnravel g gc /\ lUnravel e ec /\ CProject gc p ec. 
+Notation projectable := (fun p g => exists gc tc, gUnravel2 g gc /\ lUnravel2 (trans p g) tc /\ CProject gc p tc).
+
+(*Corollary 15*)
+Corollary projectable_iff_intermed : forall g p, projectable p g <-> Project g p (trans p g).
 Proof. 
-intros. move/project_sound_aux : H. move/ICProject_iff=>//=. case. move=> x. case. 
+intros. split.
+- case. move => x. case. intros. ssa. 
+  apply/ICProject_iff. exists x,x0. ssa. 
+- move/ICProject_iff.  eauto. 
+Qed. 
+
+Lemma decide_projectable : forall g p, projectable p g <-> projectb g p (trans p g).
+Proof. 
+intros. erewrite projectable_iff_intermed. symmetry. apply/projectb_iff.
+Qed. 
+
+
+(*Theorem 9 in the paper*)
+Lemma proj_sound : forall g p e, proj g p = Some e -> exists gc ec, gUnravel g gc /\ lUnravel e ec /\ CProject gc p ec. 
+Proof. 
+intros. move/proj_sound_aux : H. move/ICProject_iff=>//=. case. move=> x. case. 
 intros. exists x,x0. ssa. apply/gUnravel_iff=>//=. apply/lUnravel_iff=>//=.
 Qed.
 
@@ -60,7 +78,7 @@ destruct l=>//=.  apply/H.  eauto.
 simpl in *. rewrite negb_or in H2. ssa. 
 Qed. 
 
-Lemma project_lcontractive : forall p g, lcontractive (trans p g). 
+Lemma proj_lcontractive : forall p g, lcontractive (trans p g). 
 Proof. 
 move => p. elim;intros=>//=.  
 case_if. ssa.   done. 
@@ -113,7 +131,7 @@ Qed.
 Lemma EQ_end_aux : forall p g, gInvPred g -> ~~ inp p g -> full_eunf (trans p g) = EEnd.  
 Proof. 
 intros. apply inp_muve in H0. 
-move : (@project_lcontractive p g)=>HH. 
+move : (@proj_lcontractive p g)=>HH. 
 have : leaf (full_eunf (trans p g)).  apply/muve_leaf. eauto. done. 
 intros. destruct (full_eunf (trans p g)) eqn:Heqn;try done. Check gInvPred_no_fv.
 move/gInvPred_no_fv : H. move/(_ n). move/fv_proj_not.
@@ -133,8 +151,8 @@ apply/inp_iff. done.
 Qed. 
 
 
-(*Switch from eguarded because we have a comm lemma on renaimg without strong assumption prevents doing the same in project_subst*)
-Lemma project_ren : forall p g sigma, injective sigma ->  trans p g ⟨g sigma ⟩ = (trans p g) ⟨e sigma ⟩. 
+(*Switch from eguarded because we have a comm lemma on renaimg without strong assumption prevents doing the same in proj_subst*)
+Lemma proj_ren : forall p g sigma, injective sigma ->  trans p g ⟨g sigma ⟩ = (trans p g) ⟨e sigma ⟩. 
 Proof. 
 move => p. elim;intros;asimpl.  
 simpl. done. 
@@ -151,7 +169,7 @@ Qed.
 
 
 
-Lemma project_subst  : forall p g sigma, trans p g [g sigma ] = (trans p g) [e sigma >> trans p ]. 
+Lemma proj_subst  : forall p g sigma, trans p g [g sigma ] = (trans p g) [e sigma >> trans p ]. 
 Proof. 
 move => p. elim;intros;asimpl.  
 simpl. done. 
@@ -159,11 +177,11 @@ done.
 simpl.  rewrite H. asimpl. simpl. 
 symmetry.  case_if. 
 have :  eguarded 0 (trans p g) [eEVar 0 .: sigma >> (⟨g ↑ ⟩ >> trans p)]. apply/eguarded_sig2. 
-instantiate (1 := EVar). asimpl. done. case. done. simpl. intros. asimpl. rewrite project_ren //=. 
+instantiate (1 := EVar). asimpl. done. case. done. simpl. intros. asimpl. rewrite proj_ren //=. 
 apply/eguarded_fv. rewrite lType_fv2_ren. 
 apply/negP=>HH. move/mapP : HH. case. ssa. 
 move=>->. simpl. f_equal. asimpl. simpl. f_equal. fext. case.  done. move => n. simpl. asimpl. 
-rewrite project_ren //=.
+rewrite proj_ren //=.
 have :  eguarded 0 (trans p g) [eEVar 0 .: sigma >> (⟨g ↑ ⟩ >> trans p)] = false. 
 apply/negP=>HH. move : H0.  move/negP=>H2. apply H2. 
 eapply (@eguarded_sig2 _ _ EVar)  in HH.  move : HH. asimpl. done. 
@@ -183,9 +201,9 @@ Qed.
 Lemma proj_eq : forall p g, full_eunf (trans p g) = full_eunf (trans p (unf g)).  
 Proof. 
 intros. destruct g;try done;simpl;auto. 
-case_if. simpl. rewrite full_eunf_subst.   rewrite project_subst. 
+case_if. simpl. rewrite full_eunf_subst.   rewrite proj_subst. 
 asimpl. simpl. rewrite H. f_equal. remember H. clear Heqe. cbn. 
-rewrite project_subst. asimpl. rewrite /= H.
+rewrite proj_subst. asimpl. rewrite /= H.
 apply eguarded_unfv in H. 
 rewrite full_unf_com. rewrite H. asimpl. done. 
 case.  done. simpl.  done. 
@@ -198,7 +216,7 @@ rewrite /full_unf. remember (mu_height g). clear Heqn.
 elim : n g;try done. intros. rewrite iterS. rewrite -proj_eq. eauto. 
 Qed.
 
-Lemma project_project : forall p g e, Project g p e -> EQ2 e (trans p g). 
+Lemma proj_proj : forall p g e, Project g p e -> EQ2 e (trans p g). 
 Proof. 
 move => p. pcofix CIH. intros. 
 apply part_of2_or_end in H0 as H0'. destruct H0'.
@@ -280,10 +298,10 @@ intros. left. apply/paco2_mon. eauto. done.
 Qed.
 
 
-Lemma project_complete_wrt_Project : forall g p e, Project g p e -> exists e', EQ2 e e' /\ project g p = Some e'.
+Lemma proj_complete_wrt_Project : forall g p e, Project g p e -> exists e', EQ2 e e' /\ proj g p = Some e'.
 Proof. intros. 
-exists (trans p g). ssa. apply project_project=>//=. 
-rewrite /project. eapply Project_EQ2 in H.  2 : apply/project_project;eauto.  move/projectb_iff : H=>->//=. 
+exists (trans p g). ssa. apply proj_proj=>//=. 
+rewrite /proj. eapply Project_EQ2 in H.  2 : apply/proj_proj;eauto.  move/projectb_iff : H=>->//=. 
 Qed. 
 
 
@@ -349,14 +367,14 @@ exfalso. apply/Heq. done.
 Qed.
 
 (*Lemma 11 in the paper*)
-Lemma Unraveling_of_trans : forall g p, gclosed g ->  lUnravel2 (trans p g) (etocoind (trans p g)).
+Lemma unraveling_of_trans : forall g p, gclosed g ->  lUnravel2 (trans p g) (etocoind (trans p g)).
 Proof. 
 intros. apply/lInvPred_lUnravel. apply/to_lInvPred. intros. apply/fv_proj_not=>//=.
-apply/project_lcontractive.
+apply/proj_lcontractive.
 Qed.
 
 
-
+(*Lemma 12 in the paper*)
 Lemma trans_as_projection : forall p g gc ec, gUnravel2 g gc ->  CProject gc p ec -> paco2 EQ_gen bot2 ec (etocoind (trans p g)). 
 Proof. 
 move => p. pcofix CIH. 
@@ -400,7 +418,7 @@ elim/part_of_all2_ind2 : HH gc ec H1 H0;intros.
   punfold H7. inv H7. injt. inv H14. pclearbot. done.  
 
 -  subst.  apply CProject_not_part in H1. have : ECEnd = etocoind EEnd. seq. done. 
-  move=>->. apply/paco2_mon. apply/EQ2_EQ. apply/project_project. pfold. con. con.
+  move=>->. apply/paco2_mon. apply/EQ2_EQ. apply/proj_proj. pfold. con. con.
   rewrite -part_of2_iff. 
   rewrite ICpart_of_iff. eauto. eauto. 
   rewrite -gInvPred_unf_iff. 
@@ -442,8 +460,8 @@ move/H3 : H4. ssa. pclearbot. right. apply/CIH. eauto. pfold. done.
 inv H1. pfold. con. done. done. 
 Qed.
 
-
-Lemma project_complete : forall gc p ec g, CProject gc p ec -> gUnravel g gc -> exists e, lUnravel2 e ec  /\ project g p = Some e. 
+(*Theorem 13 in the paper*)
+Lemma proj_complete : forall gc p ec g, CProject gc p ec -> gUnravel g gc -> exists e, lUnravel2 e ec  /\ proj g p = Some e. 
 Proof. 
 intros. exists (trans p g). ssa. 
 apply/lUnravel_iff.
@@ -451,18 +469,18 @@ suff : exists ec', (trans p g) << lUnravel_gen >> ec'. case.
 intros. have :  paco2 EQ_gen bot2 ec (etocoind (trans p g)). apply/trans_as_projection. eauto. apply/gUnravel_iff. eauto. done. 
 intros. apply/lUnravel_iff.  apply/lUnravel_eq. apply/EQ_sym. eauto.  
 apply/lInvPred_lUnravel. apply/to_lInvPred. intros. apply/fv_proj_not. 
-apply/gInvPred_no_fv. apply/Unravel_gInvPred. eauto. apply/gUnravel_iff. eauto. apply project_lcontractive.
+apply/gInvPred_no_fv. apply/Unravel_gInvPred. eauto. apply/gUnravel_iff. eauto. apply proj_lcontractive.
 exists (etocoind (trans p g)).
 apply/lUnravel_iff. apply/lInvPred_lUnravel. 
 apply/to_lInvPred. intros. apply/fv_proj_not. 
-apply/gInvPred_no_fv. apply/Unravel_gInvPred. eauto. apply/gUnravel_iff. eauto. apply project_lcontractive.
-rewrite /project. case_if. done. 
+apply/gInvPred_no_fv. apply/Unravel_gInvPred. eauto. apply/gUnravel_iff. eauto. apply proj_lcontractive.
+rewrite /proj. case_if. done. 
 exfalso. have : ~  projectb g p (trans p g) .  destruct ( projectb g p (trans p g) );try done. 
 intros. apply / x. clear H1. 
 apply/projectb_iff.
 apply/ICProject_iff. exists gc. exists (etocoind (trans p g)).
 ssa. apply/gUnravel_iff.  eauto. apply/lInvPred_lUnravel/to_lInvPred. intros. apply/fv_proj_not. 
-apply/gInvPred_no_fv. apply/Unravel_gInvPred. apply/gUnravel_iff. eauto. apply project_lcontractive.
+apply/gInvPred_no_fv. apply/Unravel_gInvPred. apply/gUnravel_iff. eauto. apply proj_lcontractive.
 apply/CProject_EQ. eauto. apply/trans_as_projection. apply/gUnravel_iff. eauto. done.
 Qed.
 

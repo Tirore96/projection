@@ -90,7 +90,6 @@ CoInductive gcType :=
 Lemma gc_match : forall g, g = match g with | GCEnd => GCEnd | GCMsg a u g0 => GCMsg a u g0 |  GCBranch a gs => GCBranch a gs end. 
 Proof. case;auto. Qed.
 
-
 Definition gtocoind' (f : gType -> gcType)  g :=
 match full_unf g with 
 | GMsg a u g0 =>  GCMsg a u (f g0) 
@@ -472,6 +471,7 @@ destruct (mapP H3). subst. apply/flattenP. exists (enumg x0). done.
 apply/H. done. eauto. done. 
 Qed.
 
+
 Lemma enumg_closed_nextg_unf : forall e, next_closed (enumg e) nextg_unf.  
 Proof. 
 rewrite /next_closed. intros. rewrite /nextg_unf in H0. apply/enumg_closed_nextg. 
@@ -707,3 +707,6 @@ Proof. intros.  split;intros. apply/gUnravel_iff. apply/next_rec_sound. done.
 erewrite gUnravel_iff in H. 
 apply/next_rec_complete_aux. eauto. 
 Qed.
+
+
+

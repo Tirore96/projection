@@ -652,6 +652,7 @@ apply H in e. *)
 
 Definition projectb g p e := (has_tree g) && (pair_next_rec p nil (project_predP p) true (g,e)).
 
+(*Theorem 27*)
 Lemma projectb_iff : forall g p e, projectb g p e <-> Project g p e. 
 Proof. 
 intros;split. move/andP=>[]. ssa. move/projectb_sound_aux : b.
