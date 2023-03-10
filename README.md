@@ -1,6 +1,6 @@
 This repository is the Coq mechanisation that accompanies the paper "Sound and Complete Projection of Multi Party Session Types". The code has been tested with Coq version 8.15.2.
 
-#Folder structure
+# Folder structure
 The code is located in the theories/ folder with the following structure
 
 utils.v : Miscellaneous definitions and proofs\
@@ -17,45 +17,40 @@ Projection/\
   projectDecide.v : Decision procedure for intermediate projection\
   indProj.v : Computable Inductive Projection, soundness and completeness proofs
 
-#Mapping from paper to code
+# Mapping from paper to code
 Section 2 (Global Types, Local Types, and Standard Projection) -> IndTypes/\
 Section 3 (Projection on Coinductive Types) -> CoTypes/\
 Section 4 (Projection on Inductive Types: Soundness and Completeness) -> Projection/IndProj.v\
 Section 5 (Deciding Projectability) -> Projection/Intermediateproj.v, Projection/ProjectDecide.v
 
-#Locations of definitions, lemmas, corrolaries and theorems\
+# Locations of definitions, lemmas, corrolaries and theorems
 Definition 1 ---> IndTypes/syntax.v (gType,lType)\
-Definition 2 ---> coTypes/coGlobal.v (gcType)
-             ---> coTypes/coLocal.v (lcType)
-Definition 3 ---> coTypes/coGlobal.v (gUnravel)
-             ---> coTypes/coLocal.v (lUnravel)
-Proposition 4 ---> CoTypes/coGlobal.v (proposition_4)
-Definition 6 ---> Projection/indProj.v (proj)
-Definition 7 ---> Projection/indProj.v (trans)
-Definition 8 ---> Projection/indProj.v (projectable)
-Theorem 9 ---> Projection/indProj.v (proj_sound)
-Definition 10 ---> CoTypes/coGlobal.v (gtocoind)
-              ---> CoTypes/coLlobal.v (ltocoind)
-Lemma 11 ---> Projection/indProj.v (unraveling_of_trans)
-Lemma 12 ---> Projection/indProj.v (trans_as_projection)
-Theorem 13 ---> Projection/indProj.v (proj_complete)
-Lemma 14 ---> Projection/intermediateProj.v (ICProject_iff)
-Corrolary 15 ---> Projection/indProj.v (projectable_iff_intermed)
+Definition 2 ---> coTypes/coGlobal.v (gcType), coTypes/coLocal.v (lcType)\
+Definition 3 ---> coTypes/coGlobal.v (gUnravel), coTypes/coLocal.v (lUnravel)\
+Proposition 4 ---> CoTypes/coGlobal.v (proposition_4)\
+Definition 6 ---> Projection/indProj.v (proj)\
+Definition 7 ---> Projection/indProj.v (trans)\
+Definition 8 ---> Projection/indProj.v (projectable)\
+Theorem 9 ---> Projection/indProj.v (proj_sound)\
+Definition 10 ---> CoTypes/coGlobal.v (gtocoind), CoTypes/coLlobal.v (ltocoind)\
+Lemma 11 ---> Projection/indProj.v (unraveling_of_trans)\
+Lemma 12 ---> Projection/indProj.v (trans_as_projection)\
+Theorem 13 ---> Projection/indProj.v (proj_complete)\
+Lemma 14 ---> Projection/intermediateProj.v (ICProject_iff)\
+Corrolary 15 ---> Projection/indProj.v (projectable_iff_intermed)\
 Definition 16 ---> We use no generic graph structure, only concrete instantiations in definitions 18 and 24\
-Definition 17 ---> CoTypes/coGlobal.v (next_rec) (remark: More general formulation than presented in the paper)
-              ---> Projectino/projDecide.v (pair_next_rec) (remark: More general formulation than presented in the paper)
-Definition 18 ---> CoTypes/coGlobal.v (graph of g is (enumg g,nextg_unf), see Remark 2 below)
-Lemma 20 ---> CoTypes/coGlobal.v (enumg_closed_nextg_unf)
-Definition 21 ---> Projection/projectDecide.v (g_top_act (remark: does not do unfolding, combined with PL_p from Def. 26)
-Example 22 --->
-Definitino 23 ---> Projection/projectDecide.v (e_top_act (remark: does not do unfolding)
-Definition 24 ---> Projection/projectDecide.v (graph of (g,t) is (enumge (g,t), nextge_unf))
-Definition 26 ---> Projection/projectDecide.v (project_predP)
-Theorem 27 ---> Projection/projectDecide.v (projectb_iff) (remark: missing conjunction with has_tree g, in paper, will be fixed before camera ready)
+Definition 17 ---> CoTypes/coGlobal.v (next_rec), Projection/projDecide.v (pair_next_rec) (remark: More general formulation than presented in the paper)\
+Definition 18 ---> CoTypes/coGlobal.v (graph of g is (enumg g,nextg_unf), see Remark 2 below)\
+Lemma 20 ---> CoTypes/coGlobal.v (enumg_closed_nextg_unf)\
+Definition 21 ---> Projection/projectDecide.v (g_top_act (remark: does not do unfolding, combined with PL_p from Def. 26)\
+Definitino 23 ---> Projection/projectDecide.v (e_top_act (remark: does not do unfolding)\
+Definition 24 ---> Projection/projectDecide.v (graph of (g,t) is (enumge (g,t), nextge_unf))\
+Definition 26 ---> Projection/projectDecide.v (project_predP)\
+Theorem 27 ---> Projection/projectDecide.v (projectb_iff) (remark: missing conjunction with has_tree g, in paper, will be fixed before camera ready)\
 Corollary 28 ---> Projection/indProj.v (decide_projectable)
 
 
-#Syntax representation
+# Syntax representation
 The syntax of inductive global types represented by the gType, is mapped to the paper presentation the following way
 a -> b : k<U>.g ----> GMsg (Action a b k) U g
 a -> b : k \{ L0:G0...Ln:Gn \} ----> GBranch (Action a b k) [G0,..,Gn] (where [..] is inductive list)
@@ -70,11 +65,11 @@ The representation of (Co)-inductive local type and coinductive global types are
 a -> b :^c k \{ L0:G0^c...Ln:Gn^c \} ----> GCBranch (Action a b k) [G0,..,Gn] (where [..] is inductive list)
 
 
-#Other remarks
+# Other remarks
 
 1. The unraveling relation from Section 3 is represnted by gUnravel (in CoTypes/coGlobal) and lUnravel (in CoTypes/coLocal). The relations gUnravel2 and lUnravel2 are however more convenient (and proved equivalent to their counterparts) so nearly all lemmas (except for the main ones) are stated in terms of these relations.
 
 2. The graph construction in Section 5 consisting of triple (states,d,delta) is used in CoTypes/coGlobal.v for deciding if a global type unravels to something and Project/projectDecide for deciding intermediate projection. In both cases we represent these graphs' delta and d functions simply as a function computing the list of continations (nextg_unf and nextge_unf respectively).
 
-3. sat has two implementations (next_rec and pair_next_rec), respectively for deciding unraveling and intermediate projection. For both implementations, their type differ slightly from how sat is presented in the paper by using a predicate P of type A -> seq A -> A, rather than simply being A -> bool. This makes the definition more general, but so far the functiions are only used as has been seen in the paper. 
+3. sat has two implementations (next_rec and pair_next_rec), respectively for deciding unraveling and intermediate projection. For both implementations, their type differ slightly from how sat is presented in the paper by using a predicate P of type A -> seq A -> A, rather than simply being A -> bool. This makes the definition more general, but so the function is only used in the way shown in the paper. 
 
