@@ -25,26 +25,26 @@ Definition 1 ---> IndTypes/syntax.v (gType,lType)\
 Definition 2 ---> coTypes/coGlobal.v (gcType), coTypes/coLocal.v (lcType)\
 Definition 3 ---> coTypes/coGlobal.v (gUnravel), coTypes/coLocal.v (lUnravel)\
 Proposition 4 ---> CoTypes/coGlobal.v (proposition_4)\
-Definition 6 ---> Projection/indProj.v (proj)\
-Definition 7 ---> Projection/indProj.v (trans)\
-Definition 8 ---> Projection/indProj.v (projectable)\
-Theorem 9 ---> Projection/indProj.v (proj_sound)\
-Definition 10 ---> CoTypes/coGlobal.v (gtocoind), CoTypes/coLlobal.v (ltocoind)\
-Lemma 11 ---> Projection/indProj.v (unraveling_of_trans)\
-Lemma 12 ---> Projection/indProj.v (trans_as_projection)\
-Theorem 13 ---> Projection/indProj.v (proj_complete)\
-Lemma 14 ---> Projection/intermediateProj.v (ICProject_iff)\
-Corrolary 15 ---> Projection/indProj.v (projectable_iff_intermed)\
-Definition 16 ---> We use no generic graph structure, only concrete instantiations in definitions 18 and 24\
-Definition 17 ---> CoTypes/coGlobal.v (next_rec), Projection/projDecide.v (pair_next_rec) (remark: More general formulation than presented in the paper)\
-Definition 18 ---> CoTypes/coGlobal.v (graph of g is (enumg g,nextg_unf), see Remark 2 below)\
-Lemma 20 ---> CoTypes/coGlobal.v (enumg_closed_nextg_unf)\
-Definition 21 ---> Projection/projectDecide.v (g_top_act (remark: does not do unfolding, combined with PL_p from Def. 26)\
-Definitino 23 ---> Projection/projectDecide.v (e_top_act (remark: does not do unfolding)\
-Definition 24 ---> Projection/projectDecide.v (graph of (g,t) is (enumge (g,t), nextge_unf))\
-Definition 26 ---> Projection/projectDecide.v (project_predP)\
-Theorem 27 ---> Projection/projectDecide.v (projectb_iff) (remark: missing conjunction with has_tree g, in paper, will be fixed before camera ready)\
-Corollary 28 ---> Projection/indProj.v (decide_projectable)
+Definition 7 ---> Projection/indProj.v (proj)\
+Definition 8 ---> Projection/indProj.v (trans)\
+Definition 9 ---> Projection/indProj.v (projectable)\
+Theorem 10 ---> Projection/indProj.v (proj_sound)\
+Definition 11 ---> CoTypes/coGlobal.v (gtocoind), CoTypes/coLlobal.v (ltocoind)\
+Lemma 12 ---> Projection/indProj.v (unraveling_of_trans)\
+Lemma 13 ---> Projection/indProj.v (trans_as_projection)\
+Theorem 14 ---> Projection/indProj.v (proj_complete)\
+Lemma 15 ---> Projection/intermediateProj.v (ICProject_iff)\
+Corrolary 16 ---> Projection/indProj.v (projectable_iff_intermed)\
+Definition 17 ---> We use no generic graph structure, only concrete instantiations in definitions 18 and 24\
+Definition 18 ---> CoTypes/coGlobal.v (next_rec), Projection/projDecide.v (pair_next_rec) (remark: More general formulation than presented in the paper)\
+Definition 19 ---> CoTypes/coGlobal.v (graph of g is (enumg g,nextg_unf), see Remark 2 below)\
+Lemma 21 ---> CoTypes/coGlobal.v (enumg_closed_nextg_unf)\
+Definition 22 ---> Projection/projectDecide.v (g_top_act (remark: does not do unfolding, combined with PL_p from Def. 26)\
+Definition 24 ---> Projection/projectDecide.v (e_top_act (remark: does not do unfolding)\
+Definition 25 ---> Projection/projectDecide.v (graph of (g,t) is (enumge (g,t), nextge_unf))\
+Definition 27 ---> Projection/projectDecide.v (project_predP)\
+Theorem 28 ---> Projection/projectDecide.v (projectb_iff) (remark: missing conjunction with has_tree g, in paper, will be fixed before camera ready)\
+Corollary 29 ---> Projection/indProj.v (decide_projectable)
 
 
 # Syntax representation
