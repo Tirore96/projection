@@ -898,16 +898,16 @@ match e with
 | _ => true
 end.  
 
-Fixpoint lType_fv2 e :=
+Fixpoint lType_fv e :=
   match e with
   | EVar j => [:: j]
   | EEnd => nil
-  | EMsg _ _ _ g0 => lType_fv2 g0
-  | EBranch _ _ gs => flatten (map lType_fv2 gs)
-  | ERec g0 => map predn (filter (fun n => n != 0) (lType_fv2 g0))
+  | EMsg _ _ _ g0 => lType_fv g0
+  | EBranch _ _ gs => flatten (map lType_fv gs)
+  | ERec g0 => map predn (filter (fun n => n != 0) (lType_fv g0))
   end.
 
-Definition eclosed e := forall n, n \notin lType_fv2 e.
+Definition eclosed e := forall n, n \notin lType_fv e.
 
 
 Lemma eguarded_sig2 : forall g sigma sigma' i, eguarded i g [e sigma] -> (forall n, eguarded i (sigma n) -> eguarded i (sigma' n)) -> eguarded i g [e sigma'].
@@ -922,14 +922,14 @@ Qed.
 
 
 
-Lemma  eguarded_fv : forall g v, v \notin lType_fv2 g -> eguarded v g.
+Lemma  eguarded_fv : forall g v, v \notin lType_fv g -> eguarded v g.
 Proof.
 elim;rewrite /=;try done;intros.
 rewrite !inE in H. lia.
 apply H. move : H0. intros. apply/negP=>HH'. apply/negP. apply H0. apply/mapP. exists v.+1. rewrite mem_filter. ssa. done. 
 Qed.
  
-Lemma inotin : forall g i sigma, (forall n, i !=  sigma n) -> i \notin lType_fv2 g ⟨e sigma ⟩.
+Lemma inotin : forall g i sigma, (forall n, i !=  sigma n) -> i \notin lType_fv g ⟨e sigma ⟩.
 Proof.
 elim;rewrite /=;try done;intros. rewrite !inE. specialize H with n. lia.
 apply/negP. move/mapP. case. ssa. subst. rewrite mem_filter in p. ssa. 
@@ -1000,7 +1000,7 @@ asimpl.  rewrite /id. intros. apply/eqP.  move => HH. subst. simpl in H0. done. 
 eauto. apply/allP=> x xIn.  rewrite all_map in H0.  eapply H.  eauto.  apply (allP H0).  done. 
 Qed .
 
-Lemma lcontractive_subst3 : forall g sigma n, lcontractive g [e sigma] -> n \in lType_fv2 g -> lcontractive (sigma n).
+Lemma lcontractive_subst3 : forall g sigma n, lcontractive g [e sigma] -> n \in lType_fv g -> lcontractive (sigma n).
 Proof. 
 elim;rewrite /=;intros;try done. rewrite inE in H0. rewrite (eqP H0). done. 
 move/mapP : H1. case. intros. subst. rewrite mem_filter in p. ssa. destruct x. ssa. ssa.
@@ -1010,19 +1010,19 @@ move/flattenP : H1.   case.  intros. move/mapP : p.   case.  intros. subst.
 apply/H.  eauto. rewrite all_map in H0. apply (allP H0).  done. done.  
 Qed. 
 
-Lemma lType_fv2_ren : forall g sigma, (lType_fv2 g ⟨e sigma⟩) = map sigma (lType_fv2 g). 
+Lemma lType_fv_ren : forall g sigma, (lType_fv g ⟨e sigma⟩) = map sigma (lType_fv g). 
 Proof. 
 elim;rewrite //=;intros. 
 rewrite -!map_comp. rewrite H.
 rewrite filter_map /=. clear H. asimpl. 
-elim : (lType_fv2 e). done. ssa. 
+elim : (lType_fv e). done. ssa. 
 destruct (eqVneq a 0). subst. simpl. ssa. 
 simpl. destruct a. done. simpl. f_equal. done. 
 rewrite -!map_comp. rewrite map_flatten. rewrite -!map_comp. 
 f_equal. apply/eq_in_map=> x xIn. simpl. auto. 
 Qed.
 
-Lemma lType_fv2_subst : forall g sigma, (lType_fv2 g [e sigma]) = flatten (map (sigma >> lType_fv2) (lType_fv2 g)). 
+Lemma lType_fv_subst : forall g sigma, (lType_fv g [e sigma]) = flatten (map (sigma >> lType_fv) (lType_fv g)). 
 Proof. 
 elim;rewrite //=;intros. 
 rewrite cats0. asimpl. done. 
@@ -1031,13 +1031,13 @@ asimpl. Search _ ((filter _ (flatten _))). rewrite filter_flatten.
 rewrite -!map_comp. rewrite !map_flatten.
 rewrite -map_comp.
 rewrite /comp. asimpl. clear H.
-elim : ( lType_fv2 e);try done. ssa. 
+elim : ( lType_fv e);try done. ssa. 
 destruct (eqVneq a 0). simpl. subst. simpl. done. 
 simpl. destruct a. done. simpl.
-f_equal. asimpl. rewrite lType_fv2_ren. 
+f_equal. asimpl. rewrite lType_fv_ren. 
 rewrite filter_map /=. rewrite -map_comp.
 clear i.  clear H. 
-elim : ( lType_fv2 (sigma a));try done. ssa. 
+elim : ( lType_fv (sigma a));try done. ssa. 
 f_equal. done. done.  
 
 rewrite -map_comp. 
@@ -1050,13 +1050,13 @@ Qed.
 
 
 
-Lemma lType_fv2_eunf : forall g n, (n \in lType_fv2 g) = (n \in lType_fv2 (eunf g)).  
+Lemma lType_fv_eunf : forall g n, (n \in lType_fv g) = (n \in lType_fv (eunf g)).  
 Proof. 
-case=>//=. intros. rewrite lType_fv2_subst. 
+case=>//=. intros. rewrite lType_fv_subst. 
 apply/eq_iff. split. move/mapP=>[] x /=. rewrite mem_filter. ssa. subst. 
 apply/flattenP. destruct x;try done. simpl. 
-have : ((ERec l .: EVar) >> lType_fv2) = 
-([seq i.-1 | i <- lType_fv2 l & i != 0] .: fun n => [::n]).
+have : ((ERec l .: EVar) >> lType_fv) = 
+([seq i.-1 | i <- lType_fv l & i != 0] .: fun n => [::n]).
 asimpl. simpl. f_equal. move=>->.
 exists ([::x]). 
 apply/mapP. exists x.+1. ssa. simpl. done. done. 
@@ -1065,10 +1065,10 @@ move : q0. asimpl. simpl. rewrite inE. move/eqP. intros. subst. apply/mapP. exis
 rewrite mem_filter. ssa. 
 Qed.
 
-Lemma lType_fv2_full_eunf : forall g n, (n \in lType_fv2 g) = (n \in lType_fv2 (full_eunf g)).  
+Lemma lType_fv_full_eunf : forall g n, (n \in lType_fv g) = (n \in lType_fv (full_eunf g)).  
 Proof. 
 intros. rewrite /full_eunf. remember (emu_height g). clear Heqn0. elim : n0 g. done. 
-intros. rewrite iterS. rewrite H. apply/lType_fv2_eunf. 
+intros. rewrite iterS. rewrite H. apply/lType_fv_eunf. 
 Qed.
 
 Lemma econtractive_unf2 : forall g , lcontractive (eunf g) -> lcontractive g. 
@@ -1076,7 +1076,7 @@ Proof.
 intros. rewrite /eunf. destruct g;try done. ssa. 
 destruct (eguarded 0 g) eqn:Heqn. done. 
 eapply (@lcontractive_subst3 _ _ 0) in H. ssa. rewrite Heqn in H0.  done.
-rewrite lType_fv2_full_eunf. 
+rewrite lType_fv_full_eunf. 
 
 apply eguarded_unfv in Heqn as Heqn'. rewrite Heqn' /= !inE //=.
 apply lcontractive_subst2 in H.  done. 

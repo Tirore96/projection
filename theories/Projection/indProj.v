@@ -104,8 +104,7 @@ Qed.
 
 
 
-
-Lemma fv_proj : forall g p n, n \in lType_fv2 (trans p g) -> n \in gType_fv2 g. 
+Lemma fv_proj : forall g p n, n \in lType_fv (trans p g) -> n \in gType_fv g. 
 Proof. 
 elim=>//=;intros. 
 move : H0. case_if. simpl. move/mapP=>[] . intros. subst. rewrite mem_filter in p0. ssa. 
@@ -116,12 +115,12 @@ eauto.
 move : H0. destruct (comp_dir _ _);try done. ssa. move : H0. 
 move/flattenP=> [] x. rewrite -!map_comp. move/mapP=>[]. intros. subst.  apply/flattenP. 
 move : q0. rewrite /comp.  move/H. move/(_ p0)=>HH.  
-exists (gType_fv2 x0)=>//=. apply/map_f. done. 
+exists (gType_fv x0)=>//=. apply/map_f. done. 
 destruct l;try done. 
 ssa. rewrite mem_cat. apply/orP. left. apply/H=>//=. eauto. 
 Qed.
 
-Lemma fv_proj_not : forall g p n, n \notin gType_fv2 g -> n \notin lType_fv2 (trans p g).
+Lemma fv_proj_not : forall g p n, n \notin gType_fv g -> n \notin lType_fv (trans p g).
 Proof. 
 intros. apply/negP. move => HH. apply/negP. apply/H. apply/fv_proj. eauto. 
 Qed. 
@@ -136,7 +135,7 @@ have : leaf (full_eunf (trans p g)).  apply/muve_leaf. eauto. done.
 intros. destruct (full_eunf (trans p g)) eqn:Heqn;try done. Check gInvPred_no_fv.
 move/gInvPred_no_fv : H. move/(_ n). move/fv_proj_not.
 move/(_ p). 
-rewrite lType_fv2_full_eunf Heqn /= inE.  lia. 
+rewrite lType_fv_full_eunf Heqn /= inE.  lia. 
 Qed. 
 
 
@@ -178,7 +177,7 @@ simpl.  rewrite H. asimpl. simpl.
 symmetry.  case_if. 
 have :  eguarded 0 (trans p g) [eEVar 0 .: sigma >> (⟨g ↑ ⟩ >> trans p)]. apply/eguarded_sig2. 
 instantiate (1 := EVar). asimpl. done. case. done. simpl. intros. asimpl. rewrite proj_ren //=. 
-apply/eguarded_fv. rewrite lType_fv2_ren. 
+apply/eguarded_fv. rewrite lType_fv_ren. 
 apply/negP=>HH. move/mapP : HH. case. ssa. 
 move=>->. simpl. f_equal. asimpl. simpl. f_equal. fext. case.  done. move => n. simpl. asimpl. 
 rewrite proj_ren //=.
@@ -346,20 +345,20 @@ Proof.
 intros. apply/iter_eunf_not_rec. done. done. 
 Qed.
 
-Lemma to_lInvPred : forall e, (forall n, n \notin lType_fv2 e) -> lcontractive e -> lInvPred e. 
+Lemma to_lInvPred : forall e, (forall n, n \notin lType_fv e) -> lcontractive e -> lInvPred e. 
 Proof. 
 pcofix CIH. 
 intros. pfold. con. remember H1 as Hcont. clear HeqHcont. 
 apply econtractive_full_eunf in H1.
-have : forall n : nat_eqType, n \notin lType_fv2 (full_eunf e). 
-intros. rewrite -lType_fv2_full_eunf. done. clear H0=>H0.
+have : forall n : nat_eqType, n \notin lType_fv (full_eunf e). 
+intros. rewrite -lType_fv_full_eunf. done. clear H0=>H0.
 destruct (full_eunf e) eqn:Heqn. 
 move : (H0 n). ssa. lia. con. 
 con. right. apply/CIH. ssa. ssa. 
 con. 
 ssa. 
 apply/ForallP=> x xIn. right. apply/CIH.
-intros. apply/negP=> HH. apply (negP (H0 n)). apply/flattenP. exists (lType_fv2 x)=>//=. 
+intros. apply/negP=> HH. apply (negP (H0 n)). apply/flattenP. exists (lType_fv x)=>//=. 
 apply/map_f. apply/inP. done. 
 apply (allP H1). apply/inP. done.
 move : (@ full_eunf_not_rec e  Hcont l) =>Heq. 
