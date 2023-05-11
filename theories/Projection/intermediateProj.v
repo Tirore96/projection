@@ -523,7 +523,7 @@ seq. pfold. con. con.
 rewrite etocoind_full_eunf. apply/lUnravel2_iff. rewrite H. seq. pfold. con. con. 
 Qed.
 
-
+(*Lemma 15 in the paper*)
 Lemma ICProject_iff : forall g p e, Project g p e <-> exists gc ec, gUnravel2 g gc /\ lUnravel2 e ec /\ CProject gc p ec. 
 Proof. 
 intros. split. intros. exists (gtocoind g). exists (etocoind e). ssa. 

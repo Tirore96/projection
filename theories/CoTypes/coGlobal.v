@@ -373,7 +373,7 @@ destruct (mapP H3). subst. apply/flattenP. exists (enumg x0). done.
 apply/H. done. eauto. done. 
 Qed.
 
-
+(*Lemma 21 in the paper*)
 Lemma enumg_closed_nextg_unf : forall e, next_closed (enumg e) nextg_unf.  
 Proof. 
 rewrite /next_closed. intros. rewrite /nextg_unf in H0. apply/enumg_closed_nextg. 

@@ -634,25 +634,10 @@ intros. apply/next_rec_complete_aux. apply next_rec_sound in H. pfold. con. punf
 rewrite full_unf_idemp in H0. eauto.
 Qed. 
 
-(*Lemma pair_imp_has_tree  : forall g e p l, (forall ge, ge \in l -> has_tree ge.1) ->  pair_next_rec p l (project_predP p) true (g,e) -> has_tree g. 
-Proof. 
-intros. funelim ( pair_next_rec p l (project_predP p) true (g, e)).
-have : (g,e0) \in visited. rewrite e //=. move/H. ssa. 
-rewrite -Heqcall in H1. ssa.
-move : H1. rewrite /project_predP /=. rewrite !foldInMapP.  case_if. ssa. 
-apply/has_tree_unf. destruct (full_unf g)eqn:Heqn. ssa.
-rewrite inp_full_unf in H4. rewrite Heqn in H4. done. 
-rewrite inp_full_unf in H4. rewrite Heqn in H4. done. 
-apply inp_iff in H4.  
-rewrite /nextge_unf /full_geunf /= Heqn /= in H2. ssa. 
-
-lia.
-have : has_tree (g,e).1. apply H.
-apply H in e. *)
 
 Definition projectb g p e := (has_tree g) && (pair_next_rec p nil (project_predP p) true (g,e)).
 
-(*Theorem 27*)
+(*Theorem 28*)
 Lemma projectb_iff : forall g p e, projectb g p e <-> Project g p e. 
 Proof. 
 intros;split. move/andP=>[]. ssa. move/projectb_sound_aux : b.
