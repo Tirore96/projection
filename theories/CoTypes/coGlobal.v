@@ -1131,7 +1131,7 @@ apply/map_f. apply/inP. done.
 apply (allP H1). apply/inP. done.
 Qed.
 
-(*Lemma 11 in the paper*)
+(*Lemma 12 in the paper*)
 Lemma unraveling_of_trans : forall g, gclosed g -> gcontractive g -> gInvPred g.   
 Proof. 
 intros. apply/to_gInvPred;done. 
