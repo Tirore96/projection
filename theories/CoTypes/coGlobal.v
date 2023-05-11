@@ -283,104 +283,6 @@ Qed.
 
 
 
-
-Fixpoint gType_fv2 e :=
-  match e with
-  | GVar j => [:: j]
-  | GEnd => nil
-  | GMsg _ _ g0 => gType_fv2 g0
-  | GBranch _ gs => flatten (map gType_fv2 gs)
-  | GRec g0 => map predn (filter (fun n => n != 0) (gType_fv2 g0))
-  end.
-
-Definition gclosed g := forall n, n \notin gType_fv2 g.
-
-Lemma gType_fv2_ren : forall g sigma, (gType_fv2 g ⟨g sigma⟩) = map sigma (gType_fv2 g). 
-Proof. 
-elim;rewrite //=;intros. 
-rewrite -!map_comp. rewrite H.
-rewrite filter_map /=. clear H. asimpl. 
-elim : (gType_fv2 g). done. ssa. 
-destruct (eqVneq a 0). subst. simpl. ssa. 
-simpl. destruct a. done. simpl. f_equal. done. 
-rewrite -!map_comp. rewrite map_flatten. rewrite -!map_comp. 
-f_equal. apply/eq_in_map=> x xIn. simpl. auto. 
-Qed.
-
-Lemma gType_fv2_subst : forall g sigma, (gType_fv2 g [g sigma]) = flatten (map (sigma >> gType_fv2) (gType_fv2 g)). 
-Proof. 
-elim;rewrite //=;intros. 
-rewrite cats0. asimpl. done. 
-rewrite H. rewrite -!map_comp. 
-asimpl. rewrite filter_flatten.
-rewrite -!map_comp. rewrite !map_flatten.
-rewrite -map_comp.
-rewrite /comp. asimpl. clear H.
-elim : ( gType_fv2 g);try done. ssa. 
-destruct (eqVneq a 0). simpl. subst. simpl. done. 
-simpl. destruct a. done. simpl.
-f_equal. asimpl. rewrite gType_fv2_ren. 
-rewrite filter_map /=. rewrite -map_comp.
-clear i.  clear H. 
-elim : ( gType_fv2 (sigma a));try done. ssa. 
-f_equal. done. done.  
-
-rewrite -map_comp. 
-rewrite !map_flatten.  rewrite -!map_comp. 
-rewrite /comp. asimpl. 
-elim : l H. done. ssa. simpl.
-rewrite flatten_cat. f_equal. auto. apply/H. auto. 
-Qed.
-
-
-(*Intermediate judgment that gives us induction principle to show gInvPred_no_fv*)
-Inductive has_var (n : nat ) :  gType -> Prop := 
- | hv0  : has_var n (GVar n)
- | hv1 a u g0 : has_var n g0 -> has_var n (GMsg a u g0)
- | hv2 g gs a : In g gs -> has_var n g  -> has_var n (GBranch a gs)
- | hv3 g : has_var n (g [g GRec g .: GVar]) ->  has_var n (GRec g).
-Hint Constructors has_var. 
-
-
-
-Lemma has_var_subst : forall g n n' sigma, has_var n g -> has_var n' (sigma n)  ->  has_var n' g [g sigma]. 
-Proof. 
-move => g n n' sigma  H. elim : H n' sigma;rewrite //=;intros. 
-con. apply/H0. done. simpl. econstructor. apply/inP. apply/mapP. exists g0. apply/inP. done. eauto. 
-apply/H1. done. con. asimpl. move/H0 : H1. asimpl. done. 
-Qed. 
-
-Lemma has_varP : forall g n, n \in gType_fv2 g -> has_var n g. 
-Proof. 
-elim=>//=;intros;auto. rewrite inE in H. rewrite (eqP H). done. 
-con. move : H0. move/mapP=>[]. intros. subst. rewrite mem_filter in p. ssa. 
-destruct x;try done. simpl. 
-move/H : H1. intros. apply/has_var_subst. eauto. simpl. con. 
-move/flattenP : H0=>[] x. move/mapP=>[]. intros. subst. econstructor. 
-apply/inP. eauto. eauto. 
-Qed.
-
-(*Cool Trick, when going from coinductive to negation of some structurally recursive boolean,
- intermediate step is to show boolean implies inductive unfolding judgment,
- it's negation is introduced into the context and the proof can be by induction on that.
- The technique informally says from the coinductive gInvPred judgment and a proof
- that we will observe a variable in finite time, we can reach a contradiction,
- so there can be no free variables.
-*)
-Lemma gInvPred_no_fv : forall g, gInvPred g -> (forall n, n \notin gType_fv2 g).
-Proof. 
-intros. apply/negP. move/has_varP=>HH. elim : HH H;intros. 
-punfold H. inv H. inv H0. punfold H1. inv H1. inv H2. pclearbot. eauto. 
-punfold H2. inv H2. inv H3. apply/H1. move/ForallP : H5. move/(_ _ H). case=>//=.
-punfold H1. inv H1. rewrite full_unf_subst in H2. apply/H0. 
-pfold. con. done. 
-Qed.
-
-(*Proposition 4 from the paper*)
-Lemma proposition_4 : forall g gc, gUnravel2 g gc -> gclosed g. 
-Proof. intros. rewrite /gclosed.  apply/gInvPred_no_fv. apply/Unravel_gInvPred. eauto.
-Qed. 
-
 Fixpoint enumg e :=
 e::
 match e with 
@@ -707,6 +609,542 @@ Proof. intros.  split;intros. apply/gUnravel_iff. apply/next_rec_sound. done.
 erewrite gUnravel_iff in H. 
 apply/next_rec_complete_aux. eauto. 
 Qed.
+
+
+Inductive gInvPred2_gen (R : gType ->  Prop) : gType   -> Prop :=
+ | rol2_gen_msg e0  d u :  R e0 -> gInvPred2_gen R  (GMsg d u e0) 
+ | rol2_gen_branch (es : seq gType)  d :  Forall R es -> gInvPred2_gen R (GBranch d es) 
+ | rol2_gen_end :   gInvPred2_gen R GEnd
+ | rol2_gen_var n : gInvPred2_gen R (GVar n).
+
+
+Lemma gInvPred2_gen_mon : monotone1 gInvPred2_gen. 
+Proof. move => x0 x1. intros. induction IN;try done. con;eauto. 
+con;eauto. apply/List.Forall_forall. intros. eauto. 
+move/List.Forall_forall : H. eauto. con. con. 
+Qed. 
+
+
+Hint Resolve gInvPred2_gen_mon : paco. 
+
+
+Notation gInvPred2 := (paco1 ( ApplyF1 full_unf \o gInvPred2_gen) bot1).
+
+
+
+
+
+
+Fixpoint gType_fv e :=
+  match e with
+  | GVar j => [:: j]
+  | GEnd => nil
+  | GMsg _ _ g0 => gType_fv g0
+  | GBranch _ gs => flatten (map gType_fv gs)
+  | GRec g0 => map predn (filter (fun n => n != 0) (gType_fv g0))
+  end.
+
+Definition gclosed g := forall n, n \notin gType_fv g.
+
+Lemma gType_fv_ren : forall g sigma, (gType_fv g ⟨g sigma⟩) = map sigma (gType_fv g). 
+Proof. 
+elim;rewrite //=;intros. 
+rewrite -!map_comp. rewrite H.
+rewrite filter_map /=. clear H. asimpl. 
+elim : (gType_fv g). done. ssa. 
+destruct (eqVneq a 0). subst. simpl. ssa. 
+simpl. destruct a. done. simpl. f_equal. done. 
+rewrite -!map_comp. rewrite map_flatten. rewrite -!map_comp. 
+f_equal. apply/eq_in_map=> x xIn. simpl. auto. 
+Qed.
+
+Lemma gType_fv_subst : forall g sigma, (gType_fv g [g sigma]) = flatten (map (sigma >> gType_fv) (gType_fv g)). 
+Proof. 
+elim;rewrite //=;intros. 
+rewrite cats0. asimpl. done. 
+rewrite H. rewrite -!map_comp. 
+asimpl. rewrite filter_flatten.
+rewrite -!map_comp. rewrite !map_flatten.
+rewrite -map_comp.
+rewrite /comp. asimpl. clear H.
+elim : ( gType_fv g);try done. ssa. 
+destruct (eqVneq a 0). simpl. subst. simpl. done. 
+simpl. destruct a. done. simpl.
+f_equal. asimpl. rewrite gType_fv_ren. 
+rewrite filter_map /=. rewrite -map_comp.
+clear i.  clear H. 
+elim : ( gType_fv (sigma a));try done. ssa. 
+f_equal. done. done.  
+
+rewrite -map_comp. 
+rewrite !map_flatten.  rewrite -!map_comp. 
+rewrite /comp. asimpl. 
+elim : l H. done. ssa. simpl.
+rewrite flatten_cat. f_equal. auto. apply/H. auto. 
+Qed.
+
+
+(*Intermediate judgment that gives us induction principle to show gInvPred_no_fv*)
+Inductive has_var (n : nat ) :  gType -> Prop := 
+ | hv0  : has_var n (GVar n)
+ | hv1 a u g0 : has_var n g0 -> has_var n (GMsg a u g0)
+ | hv2 g gs a : In g gs -> has_var n g  -> has_var n (GBranch a gs)
+ | hv3 g : has_var n (g [g GRec g .: GVar]) ->  has_var n (GRec g).
+Hint Constructors has_var. 
+
+
+
+Lemma has_var_subst : forall g n n' sigma, has_var n g -> has_var n' (sigma n)  ->  has_var n' g [g sigma]. 
+Proof. 
+move => g n n' sigma  H. elim : H n' sigma;rewrite //=;intros. 
+con. apply/H0. done. simpl. econstructor. apply/inP. apply/mapP. exists g0. apply/inP. done. eauto. 
+apply/H1. done. con. asimpl. move/H0 : H1. asimpl. done. 
+Qed. 
+
+Lemma has_varP : forall g n, n \in gType_fv g -> has_var n g. 
+Proof. 
+elim=>//=;intros;auto. rewrite inE in H. rewrite (eqP H). done. 
+con. move : H0. move/mapP=>[]. intros. subst. rewrite mem_filter in p. ssa. 
+destruct x;try done. simpl. 
+move/H : H1. intros. apply/has_var_subst. eauto. simpl. con. 
+move/flattenP : H0=>[] x. move/mapP=>[]. intros. subst. econstructor. 
+apply/inP. eauto. eauto. 
+Qed.
+
+(*Cool Trick, when going from coinductive to negation of some structurally recursive boolean,
+ intermediate step is to show boolean implies inductive unfolding judgment,
+ it's negation is introduced into the context and the proof can be by induction on that.
+ The technique informally says from the coinductive gInvPred judgment and a proof
+ that we will observe a variable in finite time, we can reach a contradiction,
+ so there can be no free variables.
+*)
+Lemma gInvPred_no_fv : forall g, gInvPred g -> (forall n, n \notin gType_fv g).
+Proof. 
+intros. apply/negP. move/has_varP=>HH. elim : HH H;intros. 
+punfold H. inv H. inv H0. punfold H1. inv H1. inv H2. pclearbot. eauto. 
+punfold H2. inv H2. inv H3. apply/H1. move/ForallP : H5. move/(_ _ H). case=>//=.
+punfold H1. inv H1. rewrite full_unf_subst in H2. apply/H0. 
+pfold. con. done. 
+Qed.
+
+
+Lemma not_imp : forall g, ~ gInvPred2 g -> ~ gInvPred2_gen (upaco1 (ApplyF1 full_unf \o gInvPred2_gen) bot1) (full_unf g).
+Proof. intros. intro. apply/H. pfold.  con. done. 
+Qed. 
+
+
+Inductive gInvPred3 : gType   -> Prop :=
+ | rol3_gen_msg g g' a u :  full_unf g = GMsg a u g' -> gInvPred3 g' -> gInvPred3 g 
+ | rol3_gen_branch g (gs : seq gType) g' a :  full_unf g = GBranch a gs -> g' \in gs -> gInvPred3 g' -> gInvPred3 g 
+ | rol3_gen_rec g g' :   full_unf g = GRec g' -> gInvPred3 g.
+
+
+Lemma gInv_idemp : forall g, gInvPred3 (full_unf g) -> gInvPred3 g. 
+Proof. 
+intros. inv H. econstructor. rewrite full_unf_idemp in H0. eauto. done.  
+rewrite full_unf_idemp in H0. econstructor 2.  eauto. eauto. done. 
+rewrite full_unf_idemp in H0. econstructor 3. eauto. 
+Qed. 
+
+Lemma gInv_idemp2 : forall g, gInvPred3 g -> gInvPred3 (full_unf g). 
+Proof. 
+intros. inv H. rewrite H0. econstructor. cbn.  eauto. done. 
+econstructor 2. rewrite full_unf_idemp. eauto. eauto. eauto. 
+econstructor 3. rewrite full_unf_idemp. eauto. 
+Qed. 
+
+Lemma guarded_ren : forall g n sigma, injective sigma ->  guarded n g -> guarded (sigma n) (g ⟨g sigma ⟩).
+Proof. 
+elim=>//=;intros. apply/eqP. move => HH.  apply H in HH. lia. 
+move : H1. asimpl. intros.
+have : injective (0 .: sigma >> succn). eauto.  
+move/H. move/(_ n.+1).  asimpl. eauto. 
+Qed. 
+
+Lemma guarded_subst : forall g n sigma , (forall n0, guarded n0 g = false  -> guarded n (sigma n0)) -> guarded n (g [g sigma]). 
+Proof. 
+elim=>//=;intros. apply/H. lia. 
+move : H0.  asimpl. intros. 
+
+apply/H.  ssa. 
+destruct n0;try done. asimpl. apply/guarded_ren. done. eauto. 
+Qed. 
+
+
+Lemma guarded_eunf  : forall g n, guarded n g -> guarded n (unf g).
+Proof. 
+case=>//=;intros.
+apply/guarded_subst. 
+ssa. destruct n0;try done. simpl. destruct (eqVneq n0 n). subst. lia. done. 
+Qed.
+
+Lemma iter_unf_guarded  : forall n0 n g, guarded n g ->  iter n0 unf g <> GVar n.
+Proof. 
+elim;intros.
+simpl in H. subst. simpl. destruct g;try done. simpl in H. move=> HH. inv HH. lia.
+rewrite iterSr.  apply H. apply/guarded_eunf. done. 
+Qed.
+
+
+Lemma full_unf_com2 : forall g sigma,  (forall n : nat_eqType, ~~ guarded n g -> mu_height (sigma n) = 0) -> full_unf g [g sigma] = (full_unf g) [g sigma ]. 
+Proof. 
+intros. rewrite /full_unf. rewrite mu_height_subst. 
+remember (mu_height g). 
+clear Heqn. 
+elim : n g H. simpl. done. 
+intros. simpl. rewrite H //=.
+destruct (is_gvar (iter n unf g)) eqn:Heqn.  
+
+destruct (iter n unf g) eqn:Heqn2;try done. asimpl. simpl. 
+
+
+have : mu_height (sigma n0) = 0. 
+apply/H0. apply/negP=>HH. apply (@iter_unf_guarded n) in HH. rewrite Heqn2 in HH. done. 
+destruct (sigma n0);try done. 
+rewrite unf_subst //=. destruct (iter n unf g);try done. 
+eauto. 
+Qed.
+
+
+Lemma guarded_uniq : forall g n0 n1, guarded n0 g = false -> guarded n1 g = false -> n0 = n1.
+Proof. 
+elim=>//=. 
+intros. lia. 
+intros. suff : n0.+1 = n1.+1.  lia. apply/H=>//=. 
+Qed.
+
+Lemma guarded_ren2 : forall g n sigma, guarded (sigma n) (g ⟨g sigma ⟩) -> guarded n g.
+Proof. 
+elim=>//=;intros. apply/eqP. move => HH.  apply/negP. apply/H. apply/eqP. f_equal. done. 
+apply/H.
+instantiate (1 := (0 .: sigma >> succn)). asimpl. done. 
+Qed. 
+
+Lemma guarded_subst2 : forall g n n0 sigma ,  guarded n (g [g sigma]) ->  guarded n (sigma n0) = false -> guarded n0 g. 
+Proof. 
+elim=>//=;intros. destruct (eqVneq n n1);try done. subst. rewrite H0 in H. done. 
+move/H : H0. asimpl. move/(_ n0.+1). asimpl.
+move => HH. apply HH. apply/negP=> HH2. apply/negP. move : H1. move/negP/negP. eauto. 
+apply guarded_ren2 in HH2. eauto. 
+Qed. 
+
+Lemma guarded_unfv : forall g n, guarded n g = false -> full_unf g = GVar n. 
+Proof. 
+intros. rewrite /full_unf. remember (mu_height g). 
+move : n0 g Heqn0 H.  
+elim=>//=. case=>//=. intros. f_equal=>//=. lia. 
+intros. 
+destruct g;try done. simpl in Heqn0.
+rewrite -iterS iterSr /=. rewrite H. done. 
+rewrite mu_height_subst. inv Heqn0=>//=. 
+case. simpl. intros. simpl in H0. have : n.+1 = 0. apply/guarded_uniq. lia. lia. 
+done. done. 
+simpl in *. apply/negP=> HH. apply/negP. move/negP/negP : H0. eauto. 
+eapply guarded_subst2 in HH. eauto. asimpl. simpl. lia. 
+Qed.
+
+
+Lemma gInv_struct0 : forall g sigma,  (forall n, mu_height (sigma n.+1) = 0) ->  gInvPred3 g -> gInvPred3 (g[g sigma]). 
+Proof. 
+intros. elim : H0 H. intros. apply/gInv_idemp. rewrite full_unf_com2. rewrite H. ssa. econstructor. ssa. 
+apply/H1. done. intros. destruct n. have : guarded 0 g0 = false. lia. 
+move/guarded_unfv. move=> HH2.  rewrite HH2 in H. done. done. 
+intros. econstructor 2.  rewrite full_unf_com2. rewrite H. asimpl. eauto. 
+intros. destruct n. have : guarded 0 g0 = false. lia. move/guarded_unfv.  move => HH. 
+rewrite H in HH.  done.  done. apply/map_f.  eauto.  apply/H2.  done. 
+intros. econstructor 3. rewrite full_unf_com2. rewrite H. asimpl.  eauto. 
+intros. destruct n.  have : guarded 0 g0 = false. lia. move/guarded_unfv. move => HH. intros. rewrite HH in H. done. 
+done.
+Qed. 
+Lemma gInv_struct : forall g,  gInvPred3 g -> gInvPred3 (GRec g). 
+Proof. intros. apply/gInv_idemp. rewrite full_unf_subst. 
+destruct (guarded 0 g) eqn:Heqn. 
+rewrite full_unf_com2. apply/gInv_struct0. 
+ssa. apply/gInv_idemp2.  done. 
+intros. destruct n. rewrite Heqn in H0. done. done. 
+apply guarded_unfv in Heqn.
+apply gInv_idemp2 in H. rewrite Heqn in H. inv H. done. done. done. 
+Qed. 
+
+Inductive Bad3 : gType -> Prop := 
+ | Bad31 g : guarded 0 g = false  -> Bad3 (GRec g)
+ | Bad32 g : Bad3 g -> Bad3 (GRec g).
+
+
+
+Lemma bad_ren : forall g sigma, Bad3 g -> Bad3 (g ⟨g sigma ⟩).   
+Proof. 
+intros. elim : H sigma;intros .
+simpl. con. apply/negP=>HH. move/negP : H. intros. apply/H. 
+apply/guarded_ren2.  move : HH. asimpl.  intros. 
+instantiate (1 := 0 .: sigma >> succn). 
+eauto. simpl. 
+simpl. constructor 2.  auto.
+Qed. 
+
+Lemma bad_subst : forall g sigma, Bad3 g -> Bad3 (g [g sigma]).   
+Proof. 
+intros. elim : H sigma;intros .
+simpl. con. apply/negP=>HH. move/negP : H. intros. apply/H. 
+apply/guarded_subst2.  eauto. simpl. done. 
+simpl. constructor 2.  auto.
+Qed. 
+
+Lemma guarded_bad : forall g n sigma, guarded n g = false -> Bad3 (sigma n) -> Bad3 g [g sigma].
+Proof. 
+elim;intros. ssa. have : n = n0 by lia. move=>->. done. 
+ssa. ssa. 
+constructor 2. apply/H.  eauto. simpl. destruct n. asimpl.  
+ssa. apply/bad_ren.  done. asimpl.  apply/bad_ren. done. 
+ssa. ssa. 
+Qed. 
+
+Lemma bad_guarded : forall g, Bad3 g -> Bad3 (unf g).  
+Proof.
+intros. elim : H;intros. 
+simpl. 
+destruct g0;try done. 
+ssa. 
+have : n = 0 by lia. move=>->. ssa. con. ssa. 
+ssa. constructor 2.  
+have: Bad3 (GRec (GRec g0)) ⟨g succn ⟩.
+simpl. con.  ssa. asimpl. 
+apply/negP=> HH. move/negP : H. intros. apply/H. apply/guarded_ren2.
+instantiate (1 := 0 .: (1 .: succn >> (succn >> succn))). 
+asimpl. done. 
+intros. apply/guarded_bad.   eauto. ssa. 
+ simpl. inv H. 
+ssa. con. apply/negP=>HH. move/negP : H1. 
+intros. apply/H1. apply/guarded_subst2.  eauto. simpl. done. 
+asimpl. constructor 2. apply/bad_subst.  done. 
+Qed. 
+
+Lemma bad_guarded_full : forall g, Bad3 g -> Bad3 (full_unf g).  
+Proof. 
+intros. rewrite /full_unf. remember (mu_height g). clear Heqn.
+elim : n g H. ssa. intros. rewrite iterS.  apply/bad_guarded. 
+apply/H.  done. 
+Qed. 
+
+Lemma bad_rec : forall g, Bad3 g -> is_grec g. 
+Proof. 
+intros. inv H. ssa. ssa. 
+Qed. 
+
+Lemma cont_bad3 : forall g, guarded 0 g = false -> Bad3 (GRec g). 
+Proof. 
+elim;ssa. have : n = 0 by lia. move=>->. con. done. 
+con. 
+ssa. 
+Qed. 
+
+Lemma not_cont : forall g, ~~ gcontractive g -> gInvPred3 g. 
+Proof. 
+elim;try done.  
+intros. ssa.  rewrite negb_and in H0. destruct (orP H0). 
+ have :  is_grec (full_unf (GRec g)).
+rewrite full_unf_subst.
+have : guarded 0 g = false. lia.
+move/cont_bad3. 
+move/bad_guarded_full. rewrite full_unf_subst. 
+move/bad_rec. done. 
+intros. destruct (full_unf (GRec g)) eqn:Heqn;try done. 
+econstructor 3. eauto. 
+
+apply H in H1. apply/gInv_struct.  done. 
+ssa. econstructor. cbn.  done. auto. 
+ssa. elim : l H H0. ssa. ssa.
+
+rewrite negb_and in H1. destruct (orP H1). econstructor 2. 
+cbn.  eauto. rewrite inE. apply/orP.  left. apply/eqP.  eauto. apply/H0.
+done. done. 
+have : gInvPred3 (GBranch a l). apply/H. 
+intros. apply/H0. rewrite inE H3.  lia. done. done. 
+intros. inv x. move : H3. cbn. done. inv H3. 
+econstructor 2. cbn.  eauto. rewrite inE. apply/orP. right. eauto. done. 
+move : H3. cbn. done. 
+Qed. 
+Print gInvPred3. Search _ gInvPred3. 
+
+Lemma gInvPred_contractive3 : forall g, gInvPred2 g -> gInvPred3 g -> False.  
+Proof. intros. move : H. elim : H0;intros.  
+apply/H1. punfold H2.  inv H2. rewrite H in H3. inv H3. pclearbot. done. 
+apply/H2. punfold H3. inv H3. rewrite H in H4. inv H4. move/ForallP : H6. 
+move/inP: H0.  intros. move/H6: H0.  case;try done. 
+punfold H0. inv H0. rewrite H in H1. inv H1. 
+Qed. 
+
+Lemma gInvPred_contractive : forall g, gInvPred2 g -> gcontractive g.
+Proof. 
+intros. destruct (gcontractive g) eqn :Heqn. done. 
+have : ~~ gcontractive g. lia. move/not_cont.  intros. 
+exfalso. apply/gInvPred_contractive3.  eauto. eauto. 
+Qed. 
+
+Lemma gInvPred12 : forall g, gInvPred g -> gInvPred2 g. 
+Proof. 
+pcofix CIH. intros. punfold H0. inv H0. pfold. con. inv H. 
+con. pclearbot.  right. eauto. 
+con. elim : H2. 
+done. ssa. con. pclearbot. eauto. eauto. 
+con. 
+Qed. 
+
+Lemma gcontractive_ren : forall g sigma, injective sigma -> (forall n, n <= sigma n) ->  gcontractive  g -> gcontractive g ⟨g sigma ⟩.
+Proof.
+elim;intros;simpl;try done. 
+asimpl. split_and. have : 0 = ( 0 .: sigma >> succn) 0. done. intros. rewrite {1}x.
+apply guarded_ren. auto. ssa. apply/H=>//=. auto. intros. destruct n. simpl. done. ssa. asimpl. move : (H1 n). lia. ssa. ssa. 
+rewrite all_map. apply/allP. intro. intros. simpl. apply H. done.  done. done.  simpl in H2. apply (allP H2). done.
+Qed.
+
+Lemma guarded_ren_iff : forall g n sigma, injective sigma ->  guarded n g <-> guarded (sigma n) (g ⟨g sigma ⟩).
+Proof. intros. split;intros. apply/guarded_ren;eauto. apply/guarded_ren2. eauto. 
+Qed. 
+
+
+Lemma guarded_sig2 : forall g sigma sigma' i, guarded i g [g sigma] -> (forall n, guarded i (sigma n) -> guarded i (sigma' n)) -> guarded i g [g sigma'].
+Proof. 
+elim;rewrite /=;intros;try done.
+apply H0. done.
+asimpl. apply : H. eauto. move => n.  asimpl. simpl. intros. destruct n. done. simpl in *.
+move : H. rewrite /funcomp. specialize H1 with n. move : H0. asimpl.
+intros. rewrite -guarded_ren_iff. move : H. rewrite -guarded_ren_iff.  move/H1. done. 
+done. done. 
+Qed.
+
+Lemma  guarded_fv : forall g v, v \notin gType_fv g -> guarded v g.
+Proof.
+elim;rewrite /=;try done;intros.
+rewrite !inE in H. lia.
+apply H. move : H0. intros. apply/negP=>HH'. apply/negP. apply H0. apply/mapP. exists v.+1. rewrite mem_filter. ssa. done. 
+Qed.
+
+Lemma inoting : forall g i sigma, (forall n, i !=  sigma n) -> i \notin gType_fv g ⟨g sigma ⟩.
+Proof.
+elim;rewrite /=;try done;intros. rewrite !inE. specialize H with n. lia.
+apply/negP. move/mapP. case. ssa. subst. rewrite mem_filter in p. ssa. 
+destruct x;try done. ssa. apply/negP. apply/H. 2 : eauto. asimpl. intros.
+destruct n. done. ssa. asimpl. move: (H0 n).  lia. 
+apply/negP. move/flattenP. case. move=> x. rewrite -map_comp. move/mapP.  case. intros. subst. 
+apply/negP. apply/H. eauto. eauto. done. 
+Qed.
+
+
+Lemma gcontractive_subst : forall g sigma, gcontractive g -> (forall n, gcontractive (sigma n)) -> gcontractive g [g sigma].
+Proof. 
+elim;rewrite /=;intros;try done. 
+asimpl. split_and. 
+apply/guarded_sig2.
+instantiate (1 := (GVar 0 .: GVar  >>  ⟨g ↑ ⟩)).  asimpl. done.
+case. done. simpl. intros. apply/guarded_fv. asimpl. apply/inoting. done.
+apply H. done.  intros. destruct n.  done. simpl. asimpl.  apply/gcontractive_ren. done. done. done.
+apply H. done.  intros. done. 
+rewrite all_map. apply/allP. intro. intros. simpl. apply H. done. apply (allP H0). done. done.
+Qed.
+
+
+Lemma gcontractive_unf : forall g , gcontractive g -> gcontractive (unf g). 
+Proof.
+intros. rewrite /unf. destruct g;try done. apply/gcontractive_subst. ssa. case;done. 
+Qed.
+
+Lemma gcontractive_iter_unf : forall k g , gcontractive g -> gcontractive (iter k unf g). 
+Proof.
+elim;try done. intros. simpl. apply/gcontractive_unf. ssa. 
+Qed.
+
+Lemma gcontractive_full_eunf : forall g , gcontractive g -> gcontractive (full_unf g). 
+Proof. 
+intros. rewrite /full_unf. apply/gcontractive_iter_unf. done. 
+Qed.
+
+Lemma gType_fv_unf : forall g n, (n \in gType_fv g) = (n \in gType_fv (unf g)).  
+Proof. 
+case=>//=. intros. rewrite gType_fv_subst. 
+apply/eq_iff. split. move/mapP=>[] x /=. rewrite mem_filter. ssa. subst. 
+apply/flattenP. destruct x;try done. simpl. 
+have : ((GRec g .: GVar) >> gType_fv) = 
+([seq i.-1 | i <- gType_fv g & i != 0] .: fun n => [::n]).
+asimpl. simpl. f_equal. move=>->.
+exists ([::x]). 
+apply/mapP. exists x.+1. ssa. simpl. done. done. 
+move/flattenP=>[] x. move/mapP=>[] x0. intros. subst. destruct x0;try done.  
+move : q0. asimpl. simpl. rewrite inE. move/eqP. intros. subst. apply/mapP. exists x0.+1=>//=. 
+rewrite mem_filter. ssa. 
+Qed.
+
+Lemma gType_fv_full_unf : forall g n, (n \in gType_fv g) = (n \in gType_fv (full_unf g)).  
+Proof. 
+intros. rewrite /full_unf. remember (mu_height g). clear Heqn0. elim : n0 g. done. 
+intros. rewrite iterS. rewrite H. apply/gType_fv_unf. 
+Qed.
+
+Lemma mu_height_subst_contractive : forall g0 sigma, (forall n, 0 < mu_height (sigma n) -> guarded n g0) -> gcontractive g0 -> mu_height (g0[g sigma]) = mu_height g0.
+Proof. 
+elim; try solve [by rewrite /=];intros.
+asimpl. move : (H n). destruct (mu_height (sigma n)) eqn:Heqn. done. have : 0 < n0.+1 by lia. move => + HH. move/HH=>//=. lia. 
+simpl. f_equal. asimpl. apply H. case. rewrite //=. move=> n/=. move => HH. apply/H0. move : HH. asimpl. rewrite mu_height_ren //=. ssa. 
+Qed.
+
+Lemma mu_height_unf_contractive : forall g , gcontractive g -> (mu_height g).-1 = mu_height (unf g).
+Proof.
+move => g. rewrite /=. case : g; try solve [intros;rewrite /=;done].
+intros. rewrite /=. ssa. erewrite mu_height_subst_contractive. done. eauto. case. done. done. done. 
+Qed.
+
+Lemma mu_height_iter_unf : forall k g , gcontractive g -> (mu_height g) - k = (mu_height (iter k unf g)). 
+Proof.
+elim;intros. rewrite /=. lia.
+rewrite /=. have : mu_height g - n.+1 = (mu_height g - n).-1 by lia. move=>->. 
+erewrite H. rewrite mu_height_unf_contractive //=.  apply/gcontractive_iter_unf.  done. done. 
+Qed.
+
+Lemma iter_unf_not_rec : forall g k, gcontractive g -> mu_height g <= k -> forall g', iter k unf g <> GRec g'.
+Proof.
+intros. simpl in *. apply (mu_height_iter_unf k) in H. move : H. 
+have : mu_height g - k  = 0 by lia. move=>->. intros. destruct (iter k unf g);try done.
+Qed.
+
+Lemma full_unf_not_rec : forall g, gcontractive g -> forall g', full_unf g <> GRec g'.
+Proof.
+intros. apply/iter_unf_not_rec. done. done. 
+Qed.
+
+Lemma to_gInvPred : forall e, (forall n, n \notin gType_fv e) -> gcontractive e -> gInvPred e. 
+Proof. 
+pcofix CIH. 
+intros. pfold. con. remember H1 as Hcont. clear HeqHcont. 
+apply gcontractive_full_eunf in H1.
+have : forall n : nat_eqType, n \notin gType_fv (full_unf e). 
+intros. rewrite -gType_fv_full_unf. done. clear H0=>H0.
+destruct (full_unf e) eqn:Heqn. 
+move : (H0 n). ssa. lia. con. 
+move : (@full_unf_not_rec e  Hcont g) =>Heq. rewrite Heqn in Heq. done. 
+(*exfalso. apply/Heq. done.*)
+con. right. apply/CIH. ssa. ssa. 
+con. 
+ssa. 
+apply/ForallP=> x xIn. right. apply/CIH.
+intros. apply/negP=> HH. apply (negP (H0 n)). apply/flattenP. exists (gType_fv x)=>//=. 
+apply/map_f. apply/inP. done. 
+apply (allP H1). apply/inP. done.
+Qed.
+
+(*Lemma 11 in the paper*)
+Lemma unraveling_of_trans : forall g, gclosed g -> gcontractive g -> gInvPred g.   
+Proof. 
+intros. apply/to_gInvPred;done. 
+Qed.
+
+(*Proposition 4 from the paper*)
+Lemma proposition_4 : forall g, (exists gc, gUnravel2 g gc) <-> gclosed g /\ gcontractive g. 
+Proof. intros. split;intros. split.   rewrite /gclosed.  apply/gInvPred_no_fv. destruct H.  apply/Unravel_gInvPred. eauto.
+destruct H. apply/gInvPred_contractive/gInvPred12/Unravel_gInvPred. eauto. ssa. 
+Search _ gInvPred. Search _ gUnravel2. exists (gtocoind g). apply/gInvPred_iff. apply/unraveling_of_trans;eauto. 
+Qed. 
+
+
 
 
 
