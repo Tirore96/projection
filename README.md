@@ -1,4 +1,4 @@
-This repository is the Coq mechanisation that accompanies the paper "Sound and Complete Projection of Multi Party Session Types". The code has been tested with Coq version 8.15.2.
+This repository is the Coq mechanisation that accompanies the paper "Sound and Complete Projection of Global Types". The code has been tested with Coq version 8.15.2.
 
 # Folder structure
 The code is located in the theories/ folder with the following structure
