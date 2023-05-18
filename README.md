@@ -1,4 +1,4 @@
-This repository is the Coq mechanisation that accompanies the paper "Sound and Complete Projection of Multi Party Session Types". The code has been tested with Coq version 8.15.2.
+This repository is the Coq mechanisation that accompanies the paper "Sound and Complete Projection of Global Types". The code has been tested with Coq version 8.15.2.
 
 # Folder structure
 The code is located in the theories/ folder with the following structure
@@ -20,7 +20,7 @@ Section 3 (Projection on Coinductive Types) -> CoTypes/\
 Section 4 (Projection on Inductive Types: Soundness and Completeness) -> Projection/IndProj.v\
 Section 5 (Deciding Projectability) -> Projection/Intermediateproj.v, Projection/ProjectDecide.v
 
-# Locations of definitions, lemmas, corrolaries and theorems
+# Locations of definitions, lemmas, corollaries and theorems
 Definition 1 ---> IndTypes/syntax.v (gType,lType)\
 Definition 2 ---> coTypes/coGlobal.v (gcType), coTypes/coLocal.v (lcType)\
 Definition 3 ---> coTypes/coGlobal.v (gUnravel), coTypes/coLocal.v (lUnravel)\
