@@ -70,5 +70,5 @@ a -> b :^c k \{ L0:G0^c...Ln:Gn^c \} ----> GCBranch (Action a b k) [G0,..,Gn] (w
 
 2. The graph construction in Section 5 consisting of triple (states,d,delta) is used in CoTypes/coGlobal.v for deciding if a global type unravels to something and Project/projectDecide for deciding intermediate projection. In both cases we represent these graphs' delta and d functions simply as a function computing the list of continations (nextg_unf and nextge_unf respectively).
 
-3. sat has two implementations (sat1 and sat2), respectively for deciding unravelling and intermediate projection. For both implementations, their type differ slightly from how sat is presented in the paper by using a predicate P of type A -> seq A -> A, rather than simply being A -> bool. This makes the definition more general, but so the function is only used in the way shown in the paper. 
+3. sat has two implementations (sat1 and sat2), respectively for deciding unravelling and intermediate projection. For both implementations, their type differ slightly from how sat is presented in the paper by using a predicate P of type A -> seq A -> A, rather than simply being A -> bool. This makes the definition more general, but so far the function is only used in the way shown in the paper. 
 
