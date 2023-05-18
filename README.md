@@ -30,21 +30,23 @@ Definition 8 ---> Projection/indProj.v (trans)\
 Definition 9 ---> Projection/indProj.v (projectable)\
 Theorem 10 ---> Projection/indProj.v (proj_sound)\
 Definition 11 ---> CoTypes/coGlobal.v (gtocoind), CoTypes/coLlobal.v (ltocoind)\
-Lemma 12 ---> Projection/indProj.v (unraveling_of_trans)\
+Lemma 12 ---> Projection/indProj.v (unravelling_of_trans)\
 Lemma 13 ---> Projection/indProj.v (trans_as_projection)\
 Theorem 14 ---> Projection/indProj.v (proj_complete)\
 Lemma 15 ---> Projection/intermediateProj.v (ICProject_iff)\
 Corrolary 16 ---> Projection/indProj.v (projectable_iff_intermed)\
 Definition 17 ---> We use no generic graph structure, only concrete instantiations in definitions 18 and 24\
-Definition 18 ---> CoTypes/coGlobal.v (next_rec), Projection/projDecide.v (pair_next_rec) (remark: More general formulation than presented in the paper)\
+Definition 18 ---> CoTypes/coGlobal.v (sat1), Projection/projDecide.v (sat2) (remark: More general formulation than presented in the paper)\
 Definition 19 ---> CoTypes/coGlobal.v (graph of g is (enumg g,nextg_unf), see Remark 2 below)\
 Lemma 21 ---> CoTypes/coGlobal.v (enumg_closed_nextg_unf)\
-Definition 22 ---> Projection/projectDecide.v (g_top_act (remark: does not do unfolding, combined with PL_p from Def. 26)\
-Definition 24 ---> Projection/projectDecide.v (e_top_act (remark: does not do unfolding)\
-Definition 25 ---> Projection/projectDecide.v (graph of (g,t) is (enumge (g,t), nextge_unf))\
-Definition 27 ---> Projection/projectDecide.v (project_predP)\
-Theorem 28 ---> Projection/projectDecide.v (projectb_iff)\
-Corollary 29 ---> Projection/indProj.v (decide_projectable)
+Definition 22 ---> CoTypes/coGlobal.v (UnravelPred)\
+Lemma 23 ---> CoTypes/coGlobal.v (dec_gUnravels)\
+Definition 24 ---> Projection/projectDecide.v (g_top_act, remark: does not do unfolding, combined with PL_p from Def. 26)\
+Definition 25 ---> Projection/projectDecide.v (e_top_act, remark: does not do unfolding)\
+Definition 27 ---> Projection/projectDecide.v (graph of (g,t) is (enumge (g,t), nextge_unf))\
+Definition 29 ---> Projection/projectDecide.v (project_predP)\
+Theorem 30 ---> Projection/projectDecide.v (projectb_iff)\
+Corollary 31 ---> Projection/indProj.v (decide_projectable)
 
 
 # Syntax representation
