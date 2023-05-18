@@ -39,8 +39,8 @@ intros. split.
 - move/ICProject_iff.  eauto. 
 Qed. 
 
-(*Corrolary 31 in the paper*)
-Lemma decide_projectable : forall g p, projectable p g <-> projectb g p (trans p g).
+(*Corollary 31 in the paper*)
+Corollary decide_projectable : forall g p, projectable p g <-> projectb g p (trans p g).
 Proof. 
 intros. erewrite projectable_iff_intermed. symmetry. apply/projectb_iff.
 Qed. 
@@ -462,7 +462,7 @@ inv H1. pfold. con. done. done.
 Qed.
 
 (*Theorem 14 in the paper*)
-Lemma proj_complete : forall gc p ec g, CProject gc p ec -> gUnravel g gc -> exists e, lUnravel2 e ec  /\ proj g p = Some e. 
+Theorem proj_complete : forall gc p ec g, CProject gc p ec -> gUnravel g gc -> exists e, lUnravel2 e ec  /\ proj g p = Some e. 
 Proof. 
 intros. exists (trans p g). ssa. 
 apply/lUnravel_iff.

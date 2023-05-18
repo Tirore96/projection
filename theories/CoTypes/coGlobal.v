@@ -266,6 +266,27 @@ induction H3;auto. pclearbot. eauto.
 apply/gUnravel_unf6. rewrite -H2. pfold. constructor. 
 Qed.
 
+Lemma gUnravel_iff_R : forall e ec R, paco2 gUnravel_gen R e ec <->  paco2 (UnfgUnravel \o gUnravel2_gen) R e ec. 
+Proof. intros. split. 
+move : e ec. pcofix CIH. 
+intros. punfold H0.  induction H0. pclearbot. pfold.
+constructor. rewrite /full_unf /=.  constructor. 
+inv H. eauto. eauto. pfold. con. con. done. 
+elim : gs gcs H H0. case=>//=. intros.  
+destruct gcs;try done. inv H1. con. 
+inv H4;auto. ssa. 
+punfold IHgUnravel_gen. inv IHgUnravel_gen. pfold. con. 
+rewrite full_unf_subst. done. 
+pfold. con.  con.
+intros. 
+move : e ec H.  pcofix CIH. intros. punfold H0. inv H0. 
+inv H. apply/gUnravel_unf6. rewrite -H1. pfold. constructor.
+inv H2;auto. 
+apply/gUnravel_unf6. rewrite -H1. pfold. constructor. done. 
+induction H3;auto. con;eauto.  inv H3;eauto. 
+apply/gUnravel_unf6. rewrite -H2. pfold. constructor. 
+Qed.
+
 Lemma gtocoind_rec g : (gtocoind (GRec g)) = gtocoind (g [g GRec g .: GVar]). 
 Proof. rewrite !eqs full_unf_subst //=. Qed.
 
@@ -377,7 +398,7 @@ apply/H. done. eauto. done.
 Qed.
 
 
-(*Lemma 21 in the paperx*)
+(*Lemma 21 in the paper*)
 Lemma enumg_closed_nextg_unf : forall e, next_closed (enumg e) nextg_unf.  
 Proof. 
 rewrite /next_closed. intros. rewrite /nextg_unf in H0. apply/enumg_closed_nextg. 

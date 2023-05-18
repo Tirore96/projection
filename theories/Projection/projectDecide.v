@@ -635,7 +635,7 @@ Qed.
 Definition projectb g p e := sat2 p nil (project_predP p) true (g,e).
 
 (*Theorem 30 in the paper*) 
-Lemma projectb_iff : forall g p e, projectb g p e <-> Project g p e. 
+Theorem projectb_iff : forall g p e, projectb g p e <-> Project g p e. 
 Proof. 
 intros;split.  move/projectb_sound_aux. move=> X.  
 suff : upaco2 (UnfProj \o project_gen p) bot2 g e.  case. done. done. apply/X. done. 
