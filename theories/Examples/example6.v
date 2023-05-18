@@ -13,7 +13,7 @@ Definition g := GRec (GMsg (Action a b k) u (GRec (GBranch (Action c d k') ((GVa
 Definition l := ERec (EMsg Sd k u (EVar 0)).
 Definition gc_aux gc := GCMsg (Action a b k) u (GCBranch (Action c d k') (cocons gc (cocons gc conil ))). 
 Definition gc_aux2 gc := GCMsg (Action a b k) u (GCBranch (Action c d k') ((to_coseq (gc :: gc ::nil)))).  
-CoFixpoint gc := gc_aux gc. (*Coq allows definition with gc_aux, it has to be obviously productive, we need to use gc_aux2 because unravel judgment has branching rule expecting a list of shap (to_coseq (...)*)
+CoFixpoint gc := gc_aux gc.
 
 Lemma gc_aux_aux2 : gc_aux = gc_aux2.
 Proof. fext. intros. rewrite /gc_aux /gc_aux2. 
