@@ -30,7 +30,7 @@ Definition 8 ---> Projection/indProj.v (trans)\
 Definition 9 ---> Projection/indProj.v (projectable)\
 Theorem 10 ---> Projection/indProj.v (proj_sound)\
 Definition 11 ---> CoTypes/coGlobal.v (gtocoind), CoTypes/coLlobal.v (ltocoind)\
-Lemma 12 ---> Projection/indProj.v (unraveling_of_trans)\
+Lemma 12 ---> Projection/indProj.v (unravelling_of_trans)\
 Lemma 13 ---> Projection/indProj.v (trans_as_projection)\
 Theorem 14 ---> Projection/indProj.v (proj_complete)\
 Lemma 15 ---> Projection/intermediateProj.v (ICProject_iff)\
