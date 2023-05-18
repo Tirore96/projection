@@ -39,7 +39,7 @@ intros. split.
 - move/ICProject_iff.  eauto. 
 Qed. 
 
-(*Corollary 29 in the paper*)
+(*Corrolary 31 in the paper*)
 Lemma decide_projectable : forall g p, projectable p g <-> projectb g p (trans p g).
 Proof. 
 intros. erewrite projectable_iff_intermed. symmetry. apply/projectb_iff.
@@ -101,6 +101,7 @@ destruct n. simpl. done. done.
 ssa. destruct n. simpl. exfalso. apply/negP. apply/H0. done. 
 simpl. done. 
 Qed.
+
 
 
 
@@ -367,7 +368,7 @@ exfalso. apply/Heq. done.
 Qed.
 
 (*Lemma 12 in the paper*)
-Lemma unraveling_of_trans : forall g p, gclosed g ->  lUnravel2 (trans p g) (etocoind (trans p g)).
+Lemma unravelling_of_trans : forall g p, gclosed g ->  lUnravel2 (trans p g) (etocoind (trans p g)).
 Proof. 
 intros. apply/lInvPred_lUnravel. apply/to_lInvPred. intros. apply/fv_proj_not=>//=.
 apply/proj_lcontractive.
