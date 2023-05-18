@@ -43,7 +43,7 @@ Definition 22 ---> Projection/projectDecide.v (g_top_act (remark: does not do un
 Definition 24 ---> Projection/projectDecide.v (e_top_act (remark: does not do unfolding)\
 Definition 25 ---> Projection/projectDecide.v (graph of (g,t) is (enumge (g,t), nextge_unf))\
 Definition 27 ---> Projection/projectDecide.v (project_predP)\
-Theorem 28 ---> Projection/projectDecide.v (projectb_iff) (remark: missing conjunction with has_tree g, in paper, will be fixed before camera ready)\
+Theorem 28 ---> Projection/projectDecide.v (projectb_iff)\
 Corollary 29 ---> Projection/indProj.v (decide_projectable)
 
 
