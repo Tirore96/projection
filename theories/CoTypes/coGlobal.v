@@ -559,23 +559,21 @@ destruct (e \in ((enumg e0))) eqn:Heqn.
   * rewrite -mem_rep_iff. rewrite mem_undup. apply/selfe. rewrite e1 //=. (*e \in enum e \ visited*)
 Defined. 
 
-
+Check gInvPred_gen. 
 
 Definition UnravelPred g (l : seq bool) := 
 match full_unf g with 
 | GRec _ | GVar _ => false | _ =>  all id l end. 
 
-
-(*We need gtocoind because exist statement for coinductive type doesn't give us coinduction hypothesis*)
-Lemma sat1_sound_aux : forall e l   (R : gType -> gcType -> Prop) , sat1  l UnravelPred (fun _ => true) e ->  (forall x, x \in l -> R x (gtocoind x)) ->
-upaco2 (ApplyF full_unf ssrfun.id  \o gUnravel2_gen) R e (gtocoind e). 
+Lemma sat1_sound_aux : forall e l   (R : gType ->  Prop) , sat1  l UnravelPred (fun _ => true) e ->  (forall x, x \in l -> R x) ->
+upaco1 (ApplyF1 full_unf  \o gInvPred_gen) R e. 
 Proof.
 intros. 
 funelim (sat1  l UnravelPred (fun _ => true) e). 
 right. apply/H0. done. 
 rewrite -Heqcall in H0.
 left. pcofix CIH.
-pfold. constructor. rewrite 2!eqs. 
+pfold. constructor. 
 rewrite /UnravelPred in H0.
 destruct (full_unf e) eqn:Heqn; try solve [ con | done]. 
 con. 
@@ -584,9 +582,9 @@ ssa. rewrite foldInMapP in H0. apply (allP H0). rewrite /nextg_unf Heqn /=. done
 intros. rewrite inE in H2. destruct (orP H2). rewrite (eqP H3). done. 
 auto. 
 
-con. rewrite size_map //=. 
+con. 
 have : forall e0 : gType,
-      In e0 l ->  upaco2 (ApplyF full_unf ssrfun.id \o gUnravel2_gen) R e0 (gtocoind e0). 
+      In e0 l ->  upaco1 (ApplyF1 full_unf  \o gInvPred_gen) R e0. 
 intros. apply H. rewrite /nextg_unf Heqn. simpl. auto. 
 ssa. rewrite foldInMapP in H0.  apply (allP H0). rewrite /nextg_unf Heqn /=. 
 apply/map_f. apply/inP.  done. 
@@ -595,22 +593,17 @@ rewrite inE in H3.  destruct (orP H3). rewrite (eqP H4). done. auto.
 move => HH0.
 clear Heqcall H0 Heqn.
 elim : l HH0.  intros. simpl. auto. 
-simpl. ssa. con. simpl. eauto. auto. 
+simpl. ssa. 
 Qed.
 
-Lemma sat1_sound : forall e, sat1 nil UnravelPred (fun _ => true) e ->
-gUnravel2 e (gtocoind e). 
+Lemma sat1_sound : forall e, sat1 nil UnravelPred (fun _ => true) e -> gInvPred e. 
 Proof. 
-intros. suff : upaco2 (ApplyF full_unf ssrfun.id  \o gUnravel2_gen) bot2 e (gtocoind e). case.  done. done. 
-apply/sat1_sound_aux. eauto. pclearbot. done. 
+intros. apply (@sat1_sound_aux _ _ bot1) in H. inv H. done. done. done. 
 Qed.
 
 
 
-
-
-
-Lemma sat1_complete: forall e ec l, gUnravel2 e ec -> sat1 l UnravelPred (fun _ => true) e.  
+Lemma sat1_complete: forall e l, gInvPred e -> sat1 l UnravelPred (fun _ => true) e.  
 Proof. 
 intros. funelim (sat1 l  UnravelPred (fun _ => true) e). 
 done. 
@@ -624,17 +617,17 @@ pclearbot. eauto.
 apply/allP => x. move/mapP=>[]. intros. 
 subst. move : p. move/nthP. move/(_ GEnd)=>[]. intros. subst. 
 apply/H. rewrite /nextg_unf -H2 /=. apply/inP. apply/mem_nth=>//=. 
-apply coerce_forall2 in H4;eauto. 
-eapply index_ForallIC in H4. pclearbot. apply /H4. eauto. 
-Unshelve. repeat constructor. 
+move/ForallP : H3. intros. have : In (nth GEnd es x) es. apply/inP/mem_nth. done. 
+move/H3. case=>//=.
 Qed. 
 
 
 (*Lemma 23 in the paper*)
 Lemma dec_gUnravels : forall g, gUnravels g <-> sat1 nil UnravelPred (fun _ => true) g.
-Proof. intros.  split;intros. 
-apply/sat1_complete/gUnravel_iff. eauto. 
-apply/gUnravel_iff. apply/sat1_sound. done. 
+Proof. intros.  
+split;intros. 
+apply/sat1_complete/gInvPred_iff/gUnravel_iff. done. 
+apply/gUnravel_iff/gInvPred_iff. apply/sat1_sound. done. 
 Qed.
 
 
