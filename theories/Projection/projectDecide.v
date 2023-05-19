@@ -546,8 +546,9 @@ rewrite /nextge /= Heqn3 /=.  apply/map_f. apply/inP. done.
 intros. rewrite inE in H0. destruct (orP H0). 
 move/eqP : H8. case. intros. subst. auto. auto. con. 
 ssa.  apply/Project_eunf. rewrite full_eunf_idemp in H3. rewrite (eqP H3). 
-pfold. con. con. rewrite -part_of2_iff. rewrite -inp_iff. apply/negP=>//=. 
-apply/Unravel_gInvPred. rewrite -gUnravel2_iff. apply/sat1_sound. done. 
+pfold. con. con. rewrite -part_of2_iff. rewrite -inp_iff. apply/negP=>//=.
+rewrite -gInvPred_unf_iff. 
+apply/sat1_sound. done.
 Qed.
 
 
