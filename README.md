@@ -1,4 +1,11 @@
-This repository is the Coq mechanisation that accompanies the paper "Sound and Complete Projection of Global Types". The code has been tested with Coq version 8.15.2.
+This repository contains an implementation and formal verification of a projection function on global types.
+
+[Paper](https://pure.itu.dk/en/publications/a-sound-and-complete-projection-for-global-types)
+mechanisation that accompanies the paper "Sound and Complete Projection of Global Types".
+
+Paper
+
+The code has been tested with Coq version 8.15.2.
 
 # Folder structure
 The code is located in the theories/ folder with the following structure
