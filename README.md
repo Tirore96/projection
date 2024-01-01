@@ -1,9 +1,6 @@
-This repository contains an implementation and formal verification of a projection function on global types.
+This repository is a Coq mechanisation which implements a new approach to global type projection and formally verifies its soundness and completeness.
 
-[Paper](https://pure.itu.dk/en/publications/a-sound-and-complete-projection-for-global-types)
-mechanisation that accompanies the paper "Sound and Complete Projection of Global Types".
-
-Paper
+The accompanied paper published in ITP23 can be found [here](https://pure.itu.dk/en/publications/a-sound-and-complete-projection-for-global-types)
 
 The code has been tested with Coq version 8.15.2.
 
