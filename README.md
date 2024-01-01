@@ -1,6 +1,6 @@
 This repository is a Coq mechanisation which implements a new approach to global type projection and formally verifies its soundness and completeness.
 
-This work has been published in the International Conference on Interactive Theorem Proving (ITP 2023) and can be found [here](https://pure.itu.dk/en/publications/a-sound-and-complete-projection-for-global-types)
+This work has been published in the International Conference on Interactive Theorem Proving (ITP 2023) and the paper can be found [here](https://pure.itu.dk/en/publications/a-sound-and-complete-projection-for-global-types)
 
 The code has been tested with Coq version 8.15.2.
 
