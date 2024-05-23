@@ -1,4 +1,4 @@
-From mathcomp Require Import all_ssreflect zify finmap.
+From mathcomp Require Import all_ssreflect zify.
 From Projection Require Export intermediateProj.
 Require Import Paco.paco.
 

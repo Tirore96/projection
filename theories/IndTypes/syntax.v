@@ -591,10 +591,9 @@ Ltac renamify := auto_unfold; try repeat (erewrite <- rinstInst_lType); try repe
 
 
 
-From mathcomp Require Import finmap.
 
-Open Scope fset_scope.
-Open Scope fmap_scope.
+(*Open Scope fset_scope.
+(*Open Scope fmap_scope.*)
 
 Coercion ptcps_of_act (a : action) := ptcp_from a |` [fset ptcp_to a].
 
@@ -610,5 +609,5 @@ Proof. done. Qed.
 
 Lemma in_action_eq : forall p a, p \in ptcps_of_act a = (p == ptcp_from a) ||  (p == ptcp_to a).
 Proof. intros. destruct a. by rewrite /= /ptcps_of_act !inE /=.  Qed.
-
+*)
 (*Let inE := (inE,ptcps_of_act_eq,Bool.negb_involutive,eqxx,negb_or,negb_and).*)

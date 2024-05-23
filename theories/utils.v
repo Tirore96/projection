@@ -1,4 +1,4 @@
-From mathcomp Require Import all_ssreflect finmap zify.
+From mathcomp Require Import all_ssreflect zify.
 From Equations Require Import Equations.
 
 
@@ -184,8 +184,8 @@ Ltac ssa := rewrite ?inE;simpl in *; split_and;try done.
 Lemma negb_involutive : forall b, ~~ ~~ b = b. case;done. Qed.
 
 
-Open Scope fset_scope.
-Lemma big_exists : forall (A : eqType) (B : choiceType) (l : seq A) (f0 : A -> {fset B}) p, p \in \bigcup_(j <- l) (f0 j) = has (fun x => p \in f0 x) l. 
+(*Open Scope fset_scope.*)
+(*Lemma big_exists : forall (A : eqType) (B : choiceType) (l : seq A) (f0 : A -> {fset B}) p, p \in \bigcup_(j <- l) (f0 j) = has (fun x => p \in f0 x) l. 
 Proof. 
 move => A B. elim. move => f0 p. rewrite big_nil. done. intros. simpl. rewrite big_cons !inE. destruct ( (p \in f0 a) ) eqn:Heqn;rewrite /=. 
 done.
@@ -206,7 +206,7 @@ Qed.
 
 Lemma big_cup_in : forall (A : eqType) (B: choiceType) n (l : seq A) (f0 f1 : A -> {fset B}), (forall x n, x \in l -> n \in (f0 x) -> n \in (f1 x)) -> n \in \bigcup_(j <- l) (f0 j) ->  n \in \bigcup_(j <- l) (f1 j).
 Proof. move => A B n. elim. move => f0 f1.  rewrite big_nil. done. intros. move : H1. rewrite !big_cons !inE. move/orP=>[].  intros. rewrite H0 //=. intros. erewrite H. lia. intros. apply H0. eauto. eauto. apply b. 
-Qed.
+Qed.*)
 
 
 Ltac norm_eqs := repeat (match goal with 
