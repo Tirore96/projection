@@ -398,7 +398,7 @@ apply/H. done. eauto. done.
 Qed.
 
 
-(*Lemma 21 in the paper*)
+
 Lemma enumg_closed_nextg_unf : forall e, next_closed (enumg e) nextg_unf.  
 Proof. 
 rewrite /next_closed. intros. rewrite /nextg_unf in H0. apply/enumg_closed_nextg. 
@@ -622,7 +622,7 @@ move/H3. case=>//=.
 Qed. 
 
 
-(*Lemma 23 in the paper*)
+
 Lemma dec_gUnravels : forall g, gUnravels g <-> sat1 nil UnravelPred (fun _ => true) g.
 Proof. intros.  
 split;intros. 
@@ -984,7 +984,7 @@ intros. inv x. move : H3. cbn. done. inv H3.
 econstructor 2. cbn.  eauto. rewrite inE. apply/orP. right. eauto. done. 
 move : H3. cbn. done. 
 Qed. 
-Print gInvPred3. Search _ gInvPred3. 
+
 
 Lemma gInvPred_contractive3 : forall g, gInvPred2 g -> gInvPred3 g -> False.  
 Proof. intros. move : H. elim : H0;intros.  
@@ -1141,7 +1141,7 @@ intros. rewrite -gType_fv_full_unf. done. clear H0=>H0.
 destruct (full_unf e) eqn:Heqn. 
 move : (H0 n). ssa. lia. con. 
 move : (@full_unf_not_rec e  Hcont g) =>Heq. rewrite Heqn in Heq. done. 
-(*exfalso. apply/Heq. done.*)
+
 con. right. apply/CIH. ssa. ssa. 
 con. 
 ssa. 
@@ -1151,13 +1151,13 @@ apply/map_f. apply/inP. done.
 apply (allP H1). apply/inP. done.
 Qed.
 
-(*Lemma 11 in the paper*)
+
 Lemma unravelling_of_trans : forall g, gclosed g -> gcontractive g -> gInvPred g.   
 Proof. 
 intros. apply/to_gInvPred;done. 
 Qed.
 
-(*Proposition 4 from the paper*)
+
 Lemma proposition_4 : forall g, (exists gc, gUnravel2 g gc) <-> gclosed g /\ gcontractive g. 
 Proof. intros. split;intros. split.   rewrite /gclosed.  apply/gInvPred_no_fv. destruct H.  apply/Unravel_gInvPred. eauto.
 destruct H. apply/gInvPred_contractive/gInvPred12/Unravel_gInvPred. eauto. ssa. 

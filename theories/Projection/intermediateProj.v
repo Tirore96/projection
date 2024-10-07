@@ -211,7 +211,7 @@ elim/part_of2_ind2 : H gc H0;intros.
 punfold H1. inv H1. rewrite H0 in H2. inv H2. eauto. 
 punfold H3. inv H3. rewrite H2 in H4. inv H4. pclearbot. eauto. 
 punfold H1. inv H1. rewrite H0 in H2. inv H2. eauto. 
-punfold H4. inv H4. rewrite H3 in H5. inv H5. Check In_zip. 
+punfold H4. inv H4. rewrite H3 in H5. inv H5. 
 move : (@In_zip _ _ g0 gs ecs H0 H8)=>[]. ssa. 
 econstructor 4. eauto. forallApp H10 H7. case=>//=.  eauto. 
 Qed.
@@ -224,7 +224,7 @@ punfold H0. inv H0. con. con. inv H1. eauto.
 punfold H2. inv H2. inv H3. pclearbot. con. con. 
 rewrite -H4. constructor 2. eauto. 
 punfold H0. inv H0. con. con. inv H1. eauto. 
-punfold H3. inv H3. con. con. inv H4. injt. Check In_zip2. 
+punfold H3. inv H3. con. con. inv H4. injt. 
 move : (@In_zip2 _ _ g es gs H0 H8)=>[]. ssa. 
 forallApp H9 H7. case=>[] //=.  eauto. 
 Qed.
@@ -272,7 +272,7 @@ Lemma unravel_finite : forall g gc, g << (UnfgUnravel \o gUnravel2_gen) >> gc ->
 Proof. 
 pcofix CIH. intros. 
 punfold H0. inv H0. pfold. inv H;pclearbot.  con. eauto. 
-con. apply/ForallP=> x xIn. right. Check In_zip2. 
+con. apply/ForallP=> x xIn. right. 
 move : (@In_zip2 _ _ x es ecs xIn H2)=>[]. ssa. forallApp H3 H5.  case=>[] //=. 
 eauto. con. 
 Qed.
@@ -529,7 +529,7 @@ seq. pfold. con. con.
 rewrite etocoind_full_eunf. apply/lUnravel2_iff. rewrite H. seq. pfold. con. con. 
 Qed.
 
-(*Lemma 15 in the paper*)
+
 Lemma ICProject_iff : forall g p e, Project g p e <-> exists gc ec, gUnravel2 g gc /\ lUnravel2 e ec /\ CProject gc p ec. 
 Proof. 
 intros. split. intros. exists (gtocoind g). exists (etocoind e). ssa. 

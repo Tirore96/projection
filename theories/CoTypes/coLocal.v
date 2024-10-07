@@ -3,7 +3,7 @@ From mathcomp Require Import all_ssreflect zify.
 From IndTypes Require Export elimination.
 Require Import Paco.paco.
 
-Check upaco2. 
+
 Set Implicit Arguments.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
@@ -232,7 +232,7 @@ destruct (iter n eunf g) eqn:Heqn2;try done. asimpl. simpl.
 
 
 have : emu_height (sigma n0) = 0. 
-apply/H0. apply/negP=>HH. Check iter_unf_eguarded. 
+apply/H0. apply/negP=>HH. 
 apply (@iter_unf_eguarded n) in HH. rewrite Heqn2 in HH. done. 
 destruct (sigma n0);try done. 
 rewrite eunf_subst //=. eauto. 

@@ -132,13 +132,13 @@ Inductive Unfg (R : gType -> Prop) : gType -> Prop :=
  | UnfgR  g :  R g -> Unfg R g.
 Hint Constructors Unfg. 
 
-Print part_of2. Print part_ofFU. Print part_ofF.   Check ApplyF1. 
-Print part_of2. Print part_ofFU. 
+
+
 Inductive part_of3 (p : ptcp) : gType -> Prop :=
     part_of3C g : Unfg ((part_ofF p) (part_of3 p)) g -> part_of3 p g.
 Hint Constructors part_of3. 
 
-Check part_of3_ind. 
+
 
 Lemma part_of3_ind2
      : forall (p : ptcp) (P : gType -> Prop),
@@ -233,7 +233,7 @@ Inductive part_of_all3 (p : ptcp) : gType -> Prop :=
     part_of_all3C g : Unfg ((part_of_allF p) (part_of_all3 p)) g -> part_of_all3 p g.
 Hint Constructors part_of_all3. 
 
-Check part_of_all3_ind. 
+
 
 Lemma part_of_all3_ind2
      : forall (p : ptcp) (P : gType -> Prop),
@@ -409,7 +409,7 @@ Qed.
 
 Definition gemeasure (ge : gType * lType) (visited : seq ( gType * lType)) := 
 size (rep_rem visited (undup (enumge ge))). 
-Check nextge_unf. 
+
 Equations sat2 (A : Set ) (p : ptcp) (visited : seq  (gType * lType))  (P : gType * lType -> seq A ->  A) 
     (b : A)  
     (ge : gType * lType): A by wf (gemeasure ge visited) := 
@@ -644,7 +644,7 @@ Qed.
 
 Definition projectb g p e := sat2 p nil (project_predP p) true (g,e).
 
-(*Theorem 30 in the paper*) 
+
 Theorem projectb_iff : forall g p e, projectb g p e <-> Project g p e. 
 Proof. 
 intros;split.  move/projectb_sound_aux. move=> X.  

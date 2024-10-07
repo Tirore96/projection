@@ -146,7 +146,7 @@ Proof.
 intros. apply inp_muve in H0. 
 move : (@proj_lcontractive p g)=>HH. 
 have : leaf (full_eunf (trans p g)).  apply/muve_leaf. eauto. done. 
-intros. destruct (full_eunf (trans p g)) eqn:Heqn;try done. Check gInvPred_no_fv.
+intros. destruct (full_eunf (trans p g)) eqn:Heqn;try done. 
 move/gInvPred_no_fv : H. move/(_ n). move/fv_proj_not.
 move/(_ p). 
 rewrite lType_fv_full_eunf Heqn /= inE.  lia. 
@@ -385,7 +385,7 @@ intros.
 apply lInvPred_lUnravel. apply:to_lInvPred;ssa.
 Qed.
 
-(*Lemma 12 in the paper*)
+
 Lemma unravelling_of_trans : forall g p, gclosed g ->  lUnravel2 (trans p g) (etocoind (trans p g)).
 Proof. 
 intros. apply/lInvPred_lUnravel. apply/to_lInvPred. intros. apply/fv_proj_not=>//=.
@@ -393,7 +393,7 @@ apply/proj_lcontractive.
 Qed.
 
 
-(*Lemma 13 in the paper*)
+
 Lemma trans_as_projection : forall p g gc ec, gUnravel2 g gc ->  CProject gc p ec -> paco2 EQ_gen bot2 ec (etocoind (trans p g)). 
 Proof. 
 move => p. pcofix CIH. 
@@ -479,7 +479,7 @@ move/H3 : H4. ssa. pclearbot. right. apply/CIH. eauto. pfold. done.
 inv H1. pfold. con. done. done. 
 Qed.
 
-(*Theorem 14 in the paper*)
+
 Theorem proj_complete : forall gc p ec g, CProject gc p ec -> gUnravel g gc -> exists e, lUnravel2 e ec  /\ proj g p = Some e. 
 Proof. 
 intros. exists (trans p g). ssa. 
