@@ -379,6 +379,12 @@ move : (@ full_eunf_not_rec e  Hcont l) =>Heq.
 exfalso. apply/Heq. done. 
 Qed.
 
+Lemma to_lUnravel : forall e, eclosed e -> lcontractive e -> lUnravel2 e (etocoind e). 
+Proof.
+intros.
+apply lInvPred_lUnravel. apply:to_lInvPred;ssa.
+Qed.
+
 (*Lemma 12 in the paper*)
 Lemma unravelling_of_trans : forall g p, gclosed g ->  lUnravel2 (trans p g) (etocoind (trans p g)).
 Proof. 
