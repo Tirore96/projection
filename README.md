@@ -1,3 +1,5 @@
+This branch (JAR) is the accompanying artifact to a submission to the Journal of Automated Reasoning. For the artifact associated with the conference paper published in ITP, see master branch. 
+
 This repository is a Coq mechanisation which implements a new approach to global type projection and formally verifies its soundness and completeness.
 
 This work has been published in the International Conference on Interactive Theorem Proving (ITP 2023) and the paper can be found [here](https://pure.itu.dk/en/publications/a-sound-and-complete-projection-for-global-types)
@@ -13,12 +15,12 @@ IndTypes/elimination.v : Induction principle for global and local types\
 CoTypes/coGlobal.v : Coinductive Global Types\
 CoTypes/coLocal.v : Coinductive Local Types\
 CoTypes/coProj.v : Coinductive Projection\
-Examples/* : Examples 5, 6, 20 and 28 from the paper\
+Examples/* : Examples 2, 4 and 5 from the paper\
 Projection/intermediateProj.v : Intermediate Projection\
 Projection/projectDecide.v : Decision procedure for intermediate projection\
 Projection/indProj.v : Computable Inductive Projection, soundness and completeness proofs
 
-### Installing from scratch
+# Installing from scratch
 
   Make sure opam version is 2.1.0 or above (`opam --version`).
   
