@@ -478,7 +478,13 @@ Let rwd := (etocoind'_eq, etocoind_eq, gtocoind'_eq, gtocoind_eq).
 Ltac seq := rewrite ?eqs -?rwd.
 Ltac seq_in H := rewrite ?eqs -?rwd in H.
 
-
+Lemma ICProject_weak : forall p g e gc ec, gUnravel2 g gc -> lUnravel2 e ec  -> CProject gc p ec <-> Project g p e. 
+Proof.
+intros.
+split;intros.
+apply/CIProject;eauto.
+apply/ICProject;eauto.
+Qed.
 
 Lemma Project_gtree : forall p g e, Project g p e -> gUnravel2 g (gtocoind g). 
 Proof. 

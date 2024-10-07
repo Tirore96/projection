@@ -19,6 +19,11 @@ match g with
 | GEnd => EEnd 
 end. 
 
+Corollary projectb_iff_trans : forall g p , projectb g p (trans p g) <-> Project g p (trans p g). 
+Proof.
+intros. apply/projectb_iff.
+Qed.
+
 Definition proj (g : gType) (p : ptcp) : option lType := 
 let e := trans p g in if projectb g p e then Some e else None. 
 
@@ -126,6 +131,13 @@ Lemma fv_proj_not : forall g p n, n \notin gType_fv g -> n \notin lType_fv (tran
 Proof. 
 intros. apply/negP. move => HH. apply/negP. apply/H. apply/fv_proj. eauto. 
 Qed. 
+
+
+Lemma closed_pres : forall g p, gclosed g -> eclosed (trans p g).
+Proof.
+intros. move: H. rewrite /gclosed /eclosed.
+ssa. apply fv_proj_not. eauto.
+Qed.
 
 
 
@@ -468,7 +480,7 @@ intros. exists (trans p g). ssa.
 apply/lUnravel_iff.
 suff : exists ec', (trans p g) << lUnravel_gen >> ec'. case. 
 intros. have :  paco2 EQ_gen bot2 ec (etocoind (trans p g)). apply/trans_as_projection. eauto. apply/gUnravel_iff. eauto. done. 
-intros. apply/lUnravel_iff.  apply/lUnravel_eq. apply/EQ_sym. eauto.  
+intros. apply/lUnravel_iff.  apply/lUnravel_eq. apply/EQ_sym. eauto.
 apply/lInvPred_lUnravel. apply/to_lInvPred. intros. apply/fv_proj_not. 
 apply/gInvPred_no_fv. apply/Unravel_gInvPred. eauto. apply/gUnravel_iff. eauto. apply proj_lcontractive.
 exists (etocoind (trans p g)).

@@ -323,7 +323,7 @@ Qed.
 
 
 
-Definition size_pred g := 
+Definition size_pred1 g := 
 match g with 
 | GBranch a gs => 0 < size gs 
 | _ => true 
@@ -360,7 +360,7 @@ end.
 
 Definition project_predP (p : ptcp) (ge : gType * lType) (bs : seq bool) : bool := 
   let ge' := full_geunf ge in 
- if (inp_all p ge.1) && (inp p ge.1) then if g_top_act p ge'.1 is Some l then (Some l == e_top_act ge'.2) && (all id bs) else (size_pred ge'.1) && (all id bs)
+ if (inp_all p ge.1) && (inp p ge.1) then if g_top_act p ge'.1 is Some l then (Some l == e_top_act ge'.2) && (all id bs) else (size_pred1 ge'.1) && (all id bs)
   else (gUnravelsb ge.1) && (~~ inp p ge.1) &&  (full_eunf ge'.2 == EEnd).
 
 
@@ -551,7 +551,16 @@ rewrite -gInvPred_unf_iff.
 apply/sat1_sound. done.
 Qed.
 
+Lemma projectb_sound : forall g e p   , sat2 p nil (project_predP p) true (g,e) ->
+paco2 (UnfProj \o  project_gen p) bot2 g e. 
+Proof.
+intros.
+eapply projectb_sound_aux in H.
+2: { instantiate (1:= bot2). ssa. } 
+inv H. done. done.
+Qed.
 
+(*Eval vm_compute in (sat2 (Ptcp 0) nil (project_predP (Ptcp 0)) true (GRec (GVar 0),EEnd)).*)
 Lemma Project_not_part2_aux : forall p g e, Project g p e -> ~ part_of2 p g -> EQ2 e  EEnd. 
 Proof. 
 move => p. 
@@ -642,4 +651,6 @@ intros;split.  move/projectb_sound_aux. move=> X.
 suff : upaco2 (UnfProj \o project_gen p) bot2 g e.  case. done. done. apply/X. done. 
 apply/projectb_complete_aux. 
 Qed.
+
+
 
