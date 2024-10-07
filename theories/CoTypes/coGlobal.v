@@ -1,7 +1,7 @@
 
 From mathcomp Require Import all_ssreflect zify.
 
-From IndTypes Require Export elimination.
+Require Export Proj.IndTypes.elimination.
 Require Import Paco.paco.
 
 Set Implicit Arguments.
@@ -559,7 +559,7 @@ destruct (e \in ((enumg e0))) eqn:Heqn.
   * rewrite -mem_rep_iff. rewrite mem_undup. apply/selfe. rewrite e1 //=. (*e \in enum e \ visited*)
 Defined. 
 
-Check gInvPred_gen. 
+
 
 Definition UnravelPred g (l : seq bool) := 
 match full_unf g with 

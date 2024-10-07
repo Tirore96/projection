@@ -1,5 +1,5 @@
 From mathcomp Require Import all_ssreflect zify.
-From Projection Require Export intermediateProj.
+Require Export Proj.Projection.intermediateProj.
 Require Import Paco.paco.
 
 Set Implicit Arguments.

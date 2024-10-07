@@ -1,5 +1,5 @@
 From mathcomp Require Import all_ssreflect zify.
-From Projection Require Import projectDecide.
+Require Import Proj.Projection.projectDecide.
 Require Import Paco.paco.
 
 Set Implicit Arguments.
@@ -263,7 +263,7 @@ have : In g1 (g1 :: gs). simpl. auto.
 move/H10. ssa. pclearbot. apply/Project_eunf. done. 
 apply/EQ2_eunfl. rewrite -H5. apply/paco2_mon. apply/EQ_end.
 rewrite part_of2_iff.  rewrite H2 //=. 
-rewrite gInvPred_unf_iff H2 //=. done. Search _ (Project _ _ EEnd). 
+rewrite gInvPred_unf_iff H2 //=. done.
 apply Project_eunf2 in H0. rewrite H in H0. apply Project_not_part in H0 as H0'. 
 apply/EQ2_eunfl. rewrite H. 
 apply/paco2_mon. apply/EQ_end. done. apply/gUnravel2_Rol. apply/Project_gtree.   eauto. 
@@ -503,8 +503,5 @@ apply/gInvPred_no_fv. apply/Unravel_gInvPred. apply/gUnravel_iff. eauto. apply p
 apply/CProject_EQ. eauto. apply/trans_as_projection. apply/gUnravel_iff. eauto. done.
 Qed.
 
-
-
-
-
-
+Print Assumptions proj_sound.
+Print Assumptions  proj_complete.

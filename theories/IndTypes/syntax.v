@@ -1,4 +1,4 @@
-Require Export IndTypes.unscoped.
+Require Export Proj.IndTypes.unscoped.
 From mathcomp Require Import all_ssreflect zify.
 From deriving Require Import deriving. 
 
@@ -53,7 +53,7 @@ match d0,d1 with
 | _,_ => false 
 end.
 
-Check Equality.axiom.
+
 
 Lemma dir_axiom : Equality.axiom dir_eq. 
 Proof.
@@ -205,7 +205,7 @@ Fixpoint compRenSubst_lType    (xilType : ( fin ) -> fin) (taulType : ( fin ) ->
     | EBranch  s0 s1 s2 => congr_EBranch ((fun x => (Logic.eq_refl) x) s0) ((fun x => (Logic.eq_refl) x) s1) ((list_comp (compRenSubst_lType xilType taulType thetalType EqlType)) s2)
     end.
 
-Check compRenRen_lType. Check Logic.eq_sym. Check eq_sym.
+
 Definition up_subst_ren_lType_lType    (sigma : ( fin ) -> lType ) (zetalType : ( fin ) -> fin) (theta : ( fin ) -> lType ) (Eq : forall x, ((funcomp) (ren_lType zetalType) sigma) x = theta x) : 
 forall x, ((funcomp) (ren_lType (upRen_lType_lType zetalType)) (up_lType_lType sigma)) x = (up_lType_lType theta) x :=
   fun n => match n with

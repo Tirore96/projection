@@ -1,6 +1,6 @@
 From mathcomp Require Import all_ssreflect zify.
 Require Export Proj.utils.
-From IndTypes Require Export syntax. 
+Require Export Proj.IndTypes.syntax.
 Set Implicit Arguments.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
@@ -264,7 +264,7 @@ Definition list_eq {A} (r : A -> A -> bool) l0 l1 :=  (fix list_eq
              list_eq s1' s2'
          end
      end) l0 l1.
-Print VSeqSort. 
+
 Fixpoint gType_eqb (g0 g1 : gType) { struct g0} : bool :=
 match g0, g1 with
 | GMsg a0 v0 g0', GMsg a0' v0' g1' => (a0 == a0') && value_eqb v0 v0' && (gType_eqb g0' g1') 
@@ -435,7 +435,7 @@ rewrite inE. move/orP =>[].  move/eqP=>->. auto. move/H. auto.
 Qed.
 
 
-Print gType_rect. 
+
 
 
 Lemma gType_ind
@@ -453,7 +453,7 @@ Proof.
 intros.  apply : gType_rect_true;auto. con. con. 
 intros. con. con. done. intros. rewrite inE in H6. destruct (orP H6). rewrite (eqP H7). done. auto. 
 simpl. 
-Print true_pred. con. con. 
+con. con. 
 Qed.
 
 Lemma gType_indT

@@ -1,6 +1,20 @@
--Q theories Proj
--Q theories/IndTypes IndTypes
--Q theories/CoTypes CoTypes
--Q theories/Projection Projection
+-R theories Proj
+
+theories/IndTypes/axioms.v
+theories/IndTypes/unscoped.v
+theories/IndTypes/syntax.v
+theories/IndTypes/elimination.v
+
+theories/CoTypes/coGlobal.v
+theories/CoTypes/coLocal.v
+theories/CoTypes/coProj.v
+
+theories/utils.v
+
+theories/Projection/intermediateProj.v
+theories/Projection/indProj.v
+theories/Projection/projectDecide.v
+
+
 -arg -w
 -arg none

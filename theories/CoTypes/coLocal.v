@@ -1,6 +1,6 @@
 From mathcomp Require Import all_ssreflect zify.
 
-From IndTypes Require Export elimination.
+Require Export Proj.IndTypes.elimination.
 Require Import Paco.paco.
 
 
@@ -1027,7 +1027,7 @@ Proof.
 elim;rewrite //=;intros. 
 rewrite cats0. asimpl. done. 
 rewrite H. rewrite -!map_comp. 
-asimpl. Search _ ((filter _ (flatten _))). rewrite filter_flatten.
+asimpl. rewrite filter_flatten.
 rewrite -!map_comp. rewrite !map_flatten.
 rewrite -map_comp.
 rewrite /comp. asimpl. clear H.

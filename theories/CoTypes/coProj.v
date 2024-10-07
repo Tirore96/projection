@@ -1,5 +1,5 @@
 From mathcomp Require Import all_ssreflect zify.
-From CoTypes Require Export coGlobal coLocal.
+Require Export Proj.CoTypes.coGlobal Proj.CoTypes.coLocal.
 Require Import Paco.paco.
 
 Set Implicit Arguments.
